@@ -333,13 +333,13 @@
                         rowWrapper.className = "group border border-gray-100 bg-gray-50/30 rounded-lg p-2.5 cursor-pointer hover:bg-gray-50";
                         rowWrapper.setAttribute("onclick", `toggleAccordion('log_${uniqueId}')`);
                         rowWrapper.innerHTML = `
-                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                                <div class="flex items-center space-x-2 text-sm text-gray-700 min-w-[200px]">
-                                    <span class="font-medium w-16">${actualNodeName}</span>
-                                    <span class="text-gray-400 text-xs">|</span>
-                                    <span>${isp.name}</span>
-                                    <span class="text-[10px] text-gray-400 font-mono">(${targetIP})</span>
-                                </div>
+                            <div class="flex items-center space-x-2 text-sm text-gray-700 min-w-[200px]">
+                                <!-- 移除了 w-16，加入了 whitespace-nowrap 强制单行显示 -->
+                                <span class="font-medium whitespace-nowrap">${actualNodeName}</span>
+                                <span class="text-gray-400 text-xs">|</span>
+                                <span class="whitespace-nowrap">${isp.name}</span>
+                                <span class="text-[10px] text-gray-400 font-mono whitespace-nowrap">(${targetIP})</span>
+                            </div>
                                 <div class="flex items-center space-x-3 text-xs">
                                     <div id="status_${uniqueId}" class="text-gray-400">正在追踪...</div>
                                     <svg id="arrow_${uniqueId}" class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
