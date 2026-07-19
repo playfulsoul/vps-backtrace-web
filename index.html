@@ -4,23 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VPS 跨境路由综合测绘平台</title>
+    <!-- 引入高颜值 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800 antialiased p-6">
 
     <div class="max-w-7xl mx-auto">
+        <!-- 表头 -->
         <header class="mb-8 border-b border-gray-200 pb-4 flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800 mb-1">VPS 跨境路由综合测绘平台</h1>
                 <p class="text-gray-500 text-sm">支持多节点并发排队 · 动态 Payload 模板 · 客观网络链路特征分析</p>
             </div>
+            <!-- 一键导出结果按钮 -->
             <button id="exportBtn" onclick="exportResults()" class="hidden text-sm bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow transition">
                 📋 复制纯文本报告
             </button>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- 左侧控制面板 -->
+            <!-- 左侧控制面板与术语说明 -->
             <div class="lg:col-span-1 space-y-6">
                 <!-- API 输入 -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
@@ -40,14 +43,14 @@
                     <p class="text-[11px] text-gray-500">注：填入原始对象后点击转换，系统将自动匹配 <code class="text-blue-600 font-semibold">{{IP}}</code> 与 <code class="text-blue-600 font-semibold">{{LOC}}</code> 变量。</p>
                 </div>
 
-                <!-- 测试目标 -->
+                <!-- 测试目标 (支持多选) -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                     <div class="flex items-center justify-between mb-3">
                         <label class="block text-sm font-semibold text-gray-700">3. 测试目标大区 (支持多选)</label>
                         <button type="button" onclick="selectAllCities()" class="text-[11px] text-gray-500 hover:text-gray-800">全选/反选</button>
                     </div>
                     <div id="cityContainer" class="space-y-2 max-h-48 overflow-y-auto pr-2 text-sm mb-2 border border-gray-100 rounded p-2 bg-gray-50">
-                        <!-- 动态渲染 -->
+                        <!-- 由 JS 动态渲染多选框 -->
                     </div>
 
                     <div id="customIPInputs" class="mt-3 p-3 bg-white border border-gray-200 rounded-lg space-y-3 hidden">
@@ -110,7 +113,9 @@
         </div>
     </div>
 
+    <!-- 核心逻辑脚本 -->
     <script>
+        // 内置节点数据库
         const ipDatabase = {
             "北京核心网 (华北枢纽)": { telecom: "219.141.140.10", unicom: "202.106.195.68", mobile: "221.179.155.161" },
             "上海核心网 (华东枢纽)": { telecom: "202.96.209.133", unicom: "210.22.97.1", mobile: "211.136.112.200" },
@@ -121,8 +126,10 @@
             "沈阳枢纽网 (东北枢纽)": { telecom: "219.148.204.10", unicom: "119.118.10.10", mobile: "211.137.32.225" }
         };
 
+        // 导出数据池
         let exportData = [];
 
+        // Payload 智能格式修复
         function smartConvertPayload() {
             const el = document.getElementById("payloadTemplate");
             let rawText = el.value.trim();
@@ -144,6 +151,7 @@
             }
         }
 
+        // 正则提取最终延迟
         function extractLatency(rawText) {
             const msRegex = /([0-9.]+)\s*ms/g;
             let match;
@@ -154,6 +162,7 @@
             return lastLatency ? `${lastLatency.toFixed(1)}ms` : '无响应';
         }
 
+        // 路由特征分析字典
         function analyzeRoute(rawText) {
             if (!rawText) return { route: "探测无响应", isDirect: false, transit: [] };
             
@@ -162,7 +171,7 @@
             let transitGates = [];
             const tText = rawText.toLowerCase();
 
-            // 国际骨干网特征字典 (域名特征 + IP网段双重锁定)
+            // 国际骨干网特征字典
             if (tText.includes("ntt.net") || rawText.includes("129.250.")) transitGates.push("NTT");
             if (tText.includes("cogentco") || rawText.includes("130.117.") || rawText.includes("154.54.")) transitGates.push("Cogent");
             if (tText.includes("retn.net") || rawText.includes("87.245.")) transitGates.push("RETN");
@@ -183,7 +192,7 @@
             let uniqueTransit = [...new Set(transitGates)];
             if (uniqueTransit.length > 0) typeTag = `中转`;
 
-            // 国内落地网络字典 (ASN编码 + 核心骨干网IP段双重锁定)
+            // 国内落地特征字典 (ASN + IP 段)
             if (rawText.includes("4809") || rawText.includes("CN2") || rawText.includes("59.43.")) {
                 domesticTag = "电信 CN2 GIA (AS4809)";
             } else if (rawText.includes("9929") || rawText.includes("CUII") || rawText.includes("210.14.") || rawText.includes("218.105.") || rawText.includes("210.51.")) {
@@ -224,6 +233,7 @@
 
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
+        // 渲染城市复选框
         const container = document.getElementById("cityContainer");
         Object.keys(ipDatabase).forEach((cityName, index) => {
             const div = document.createElement("div");
@@ -235,6 +245,7 @@
             container.appendChild(div);
         });
 
+        // 附加自定义节点复选框
         const customDiv = document.createElement("div");
         customDiv.className = "flex items-center space-x-2 border-t border-gray-200 mt-2 pt-2";
         customDiv.innerHTML = `
@@ -243,6 +254,7 @@
         `;
         container.appendChild(customDiv);
 
+        // 全选功能
         let allSelected = false;
         function selectAllCities() {
             allSelected = !allSelected;
@@ -251,6 +263,7 @@
             });
         }
 
+        // 异步获取本机 IP
         async function detectLocalIP() {
             const btn = document.getElementById("detectBtn");
             btn.innerText = "获取中...";
@@ -265,8 +278,10 @@
             setTimeout(() => btn.innerText = "获取本机 IP", 1500);
         }
 
+        // 初始化模板内容
         document.getElementById("payloadTemplate").value = JSON.stringify({"command": "traceroute", "host": "{{IP}}", "location": "{{LOC}}"}, null, 2);
 
+        // 核心执行逻辑
         async function startAnalysis() {
             const apiText = document.getElementById("apiUrls").value.trim();
             const templateText = document.getElementById("payloadTemplate").value.trim();
@@ -330,19 +345,21 @@
 
                         const uniqueId = `${i}_${c}_${j}`;
                         const rowWrapper = document.createElement("div");
-                        rowWrapper.className = "group border border-gray-100 bg-gray-50/30 rounded-lg p-2.5 cursor-pointer hover:bg-gray-50";
+                        rowWrapper.className = "group border border-gray-100 bg-gray-50/30 rounded-lg p-2.5 cursor-pointer hover:bg-gray-50 transition";
                         rowWrapper.setAttribute("onclick", `toggleAccordion('log_${uniqueId}')`);
+                        
+                        // 强制一行显示的 UI 布局
                         rowWrapper.innerHTML = `
-                            <div class="flex items-center space-x-2 text-sm text-gray-700 min-w-[200px]">
-                                <!-- 移除了 w-16，加入了 whitespace-nowrap 强制单行显示 -->
-                                <span class="font-medium whitespace-nowrap">${actualNodeName}</span>
-                                <span class="text-gray-400 text-xs">|</span>
-                                <span class="whitespace-nowrap">${isp.name}</span>
-                                <span class="text-[10px] text-gray-400 font-mono whitespace-nowrap">(${targetIP})</span>
-                            </div>
-                                <div class="flex items-center space-x-3 text-xs">
-                                    <div id="status_${uniqueId}" class="text-gray-400">正在追踪...</div>
-                                    <svg id="arrow_${uniqueId}" class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div class="flex items-center justify-between w-full gap-2">
+                                <div class="flex items-center space-x-2 text-sm text-gray-700 whitespace-nowrap overflow-hidden">
+                                    <span class="font-medium">${actualNodeName}</span>
+                                    <span class="text-gray-400 text-xs">|</span>
+                                    <span>${isp.name}</span>
+                                    <span class="text-[10px] text-gray-400 font-mono truncate">(${targetIP})</span>
+                                </div>
+                                <div class="flex items-center space-x-2 text-xs flex-shrink-0">
+                                    <div id="status_${uniqueId}" class="text-gray-400 flex items-center justify-end">正在追踪...</div>
+                                    <svg id="arrow_${uniqueId}" class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </div>
                             <div id="log_${uniqueId}" class="hidden mt-3 pt-2 border-t border-gray-100">
@@ -369,12 +386,13 @@
                             const analysis = analyzeRoute(rawText);
                             const latency = extractLatency(rawText);
                             
+                            // 生成标签，加入 whitespace-nowrap 防止折行
                             const typeBadge = analysis.isDirect 
-                                ? `<span class="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">直连</span>` 
-                                : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">中转: ${analysis.transit.join(',')}</span>`;
-                            const latencyBadge = `<span class="text-gray-500 font-mono w-14 text-right inline-block">${latency}</span>`;
+                                ? `<span class="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded whitespace-nowrap">直连</span>` 
+                                : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap">中转: ${analysis.transit.join(',')}</span>`;
+                            const latencyBadge = `<span class="text-gray-500 font-mono w-14 text-right inline-block whitespace-nowrap">${latency}</span>`;
 
-                            document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} <span class="text-gray-700 font-medium ml-1 mr-2">${analysis.route}</span> ${latencyBadge}`;
+                            document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} <span class="text-gray-700 font-medium ml-1 mr-2 whitespace-nowrap">${analysis.route}</span> ${latencyBadge}`;
 
                             let formattedLog = rawText;
                             try {
@@ -387,6 +405,7 @@
                             }
                             document.getElementById(`log_${uniqueId}`).querySelector('pre').innerText = formattedLog || "无详细文本。";
 
+                            // 数据存入导出池
                             exportData.push(`[${locationKey}] ${actualNodeName} ${isp.name} -> ${analysis.isDirect ? '直连' : '中转('+analysis.transit.join(',')+ ')'} | ${analysis.route} | 延迟: ${latency}`);
 
                         } catch (error) {
@@ -407,6 +426,7 @@
             exportBtn.classList.remove("hidden"); 
         }
 
+        // 导出功能
         function exportResults() {
             if (exportData.length === 0) return alert("暂无数据可导出");
             const textToCopy = "=== VPS 路由测绘报告 ===\n" + exportData.join("\n") + "\n======================";
