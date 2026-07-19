@@ -51,3 +51,5 @@
 ```javascript
 // 扩充示例：
 if (tText.match(/moscow|mow|vvo/i)) geoNodes.push("🇷🇺俄罗斯");
+
+Powered by [PlayfulSoul](https://playfulsoul.net/)
