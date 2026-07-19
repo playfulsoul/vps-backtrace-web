@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VPS 跨境路由综合测绘平台</title>
-    <!-- 引入高颜值 Tailwind CSS -->
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800 antialiased p-6">
@@ -14,7 +14,7 @@
         <header class="mb-8 border-b border-gray-200 pb-4 flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800 mb-1">VPS 跨境路由综合测绘平台</h1>
-                <p class="text-gray-500 text-sm">支持多节点并发排队 · 动态 Payload 模板 · 客观网络链路特征分析</p>
+                <p class="text-gray-500 text-sm">支持多节点并发排队 · 动态 Payload 模板 · 客观地理绕路特征嗅探</p>
             </div>
             <!-- 一键导出结果按钮 -->
             <button id="exportBtn" onclick="exportResults()" class="hidden text-sm bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow transition">
@@ -78,16 +78,21 @@
                     <h3 class="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
                         链路术语参考说明
                     </h3>
-                    <div class="space-y-4 text-xs max-h-64 overflow-y-auto text-gray-600 leading-relaxed pr-2">
+                    <div class="space-y-4 text-xs max-h-[360px] overflow-y-auto text-gray-600 leading-relaxed pr-2">
                         <div>
-                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">国内路由机制</h4>
-                            <p><strong>优化网络：</strong> 电信 CN2 GIA (AS4809)、联通 CUII (AS9929)、移动 CMIN2 (AS58807)。具备独立跨境链路，拥堵率与丢包率较低，通常具备更稳定的跨国传输保障。</p>
-                            <p class="mt-1"><strong>公众骨干网：</strong> 电信 163 (AS4134)、联通 169 (AS4837)、移动 CMNET (AS9808)。承载基础民用数据，国际出口高峰时段（20:00-23:00）易受拥堵影响。</p>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">地理走向分析</h4>
+                            <p><strong>逻辑直连：</strong> BGP网络层直接交接，未经过第三方运营商网络，但物理光缆不一定是两点之间的最短直线路径。</p>
+                            <p class="mt-1"><strong>物理绕路：</strong> 系统内建全球 IATA 机场代码词典。若识别到亚洲直连线路中途出现美、欧、澳等非相关地理标志，系统将触发红色绕路预警。</p>
                         </div>
                         <div>
-                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">国际骨干承载网</h4>
-                            <p><strong>亚太区主导：</strong> NTT (日本)、PCCW (香港)、Singtel (新加坡)、Telstra (澳洲)。数据在亚太地区中转时常接入此类一级网络。</p>
-                            <p class="mt-1"><strong>欧美区主导：</strong> Level3 / Lumen (美国)、Cogent (美国)、GTT (美国)、HE (美国)、Arelion/Telia (欧洲)、RETN (欧洲)。主要负责欧美跨大西洋及欧亚大陆流量承载。</p>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">国内路由机制</h4>
+                            <p><strong>优化网络：</strong> 电信 CN2 GIA (AS4809)、联通 CUII (AS9929)、移动 CMIN2 (AS58807)。具备独立跨境链路，拥堵率极低。</p>
+                            <p class="mt-1"><strong>公众骨干网：</strong> 电信 163 (AS4134)、联通 169 (AS4837)、移动 CMNET (AS9808)。承载大量民用数据，国际出口高峰时段（20:00-23:00）易受拥堵影响。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">常见国际骨干承载网</h4>
+                            <p><strong>亚太区主导：</strong> NTT (日本)、PCCW (香港)、Singtel (新加坡)、Telstra (澳洲)。</p>
+                            <p class="mt-1"><strong>欧美区主导：</strong> Level3 (美国)、Cogent (美国)、GTT (美国)、HE (美国)、Telia (欧洲)、RETN (欧洲)。</p>
                         </div>
                     </div>
                 </div>
@@ -126,7 +131,6 @@
             "沈阳枢纽网 (东北枢纽)": { telecom: "219.148.204.10", unicom: "119.118.10.10", mobile: "211.137.32.225" }
         };
 
-        // 导出数据池
         let exportData = [];
 
         // Payload 智能格式修复
@@ -162,24 +166,38 @@
             return lastLatency ? `${lastLatency.toFixed(1)}ms` : '无响应';
         }
 
-        // 路由特征分析字典
+        // 路由特征分析字典 (包含地理嗅探模块)
         function analyzeRoute(rawText) {
-            if (!rawText) return { route: "探测无响应", isDirect: false, transit: [] };
+            if (!rawText) return { route: "探测无响应", isDirect: false, transit: [], geoPath: [] };
             
             let typeTag = "直连";
             let domesticTag = "未知线路";
             let transitGates = [];
+            let geoNodes = [];
             const tText = rawText.toLowerCase();
 
-            // 国际骨干网特征字典
+            // ================= 地理特征嗅探 (预警绕路陷阱) =================
+            if (tText.match(/los[-_]?angeles|lax|san[-_]?jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo[-_]?alto|paix/i)) geoNodes.push("🇺🇸美洲");
+            if (tText.match(/frankfurt|fra|london|lhr|amsterdam|ams|paris|cdg/i)) geoNodes.push("🇪🇺欧洲");
+            if (tText.match(/tokyo|nrt|hnd|osaka|kix/i)) geoNodes.push("🇯🇵日本");
+            if (tText.match(/singapore|sin|sgp/i)) geoNodes.push("🇸🇬新加坡");
+            if (tText.match(/hong[-_]?kong|hkg/i)) geoNodes.push("🇭🇰香港");
+            if (tText.match(/seoul|sel|icn/i)) geoNodes.push("🇰🇷韩国");
+            if (tText.match(/moscow|mow|svo|vladivostok|vvo/i)) geoNodes.push("🇷🇺俄罗斯");
+            if (tText.match(/dubai|dxb|uae/i)) geoNodes.push("🇦🇪中东");
+            if (tText.match(/sydney|syd|melbourne|mel/i)) geoNodes.push("🇦🇺澳洲");
+
+            let uniqueGeo = [...new Set(geoNodes)];
+
+            // ================= 国际骨干网特征嗅探 =================
             if (tText.includes("ntt.net") || rawText.includes("129.250.")) transitGates.push("NTT");
             if (tText.includes("cogentco") || rawText.includes("130.117.") || rawText.includes("154.54.")) transitGates.push("Cogent");
             if (tText.includes("retn.net") || rawText.includes("87.245.")) transitGates.push("RETN");
             if (tText.includes("comcast") || rawText.includes("68.86.")) transitGates.push("Comcast");
             if (tText.includes("gtt.net") || tText.includes("ti.ws") || rawText.includes("141.136.")) transitGates.push("GTT");
-            if (tText.includes("tata") || rawText.includes("64.86.")) transitGates.push("Tata");
+            if (tText.includes("tata") || rawText.includes("64.86.") || tText.includes("as6453")) transitGates.push("Tata");
             if (tText.includes("pccw") || rawText.includes("63.218.")) transitGates.push("PCCW");
-            if (tText.includes("telia.net") || tText.includes("arelion")) transitGates.push("Telia(Arelion)");
+            if (tText.includes("telia.net") || tText.includes("arelion")) transitGates.push("Telia");
             if (tText.includes("telstra") || rawText.includes("202.84.")) transitGates.push("Telstra");
             if (tText.includes("singtel") || rawText.includes("203.208.")) transitGates.push("Singtel");
             if (tText.includes("he.net") || rawText.includes("184.105.") || rawText.includes("72.52.")) transitGates.push("HE");
@@ -192,7 +210,7 @@
             let uniqueTransit = [...new Set(transitGates)];
             if (uniqueTransit.length > 0) typeTag = `中转`;
 
-            // 国内落地特征字典 (ASN + IP 段)
+            // ================= 国内落地特征字典 (ASN + IP 段) =================
             if (rawText.includes("4809") || rawText.includes("CN2") || rawText.includes("59.43.")) {
                 domesticTag = "电信 CN2 GIA (AS4809)";
             } else if (rawText.includes("9929") || rawText.includes("CUII") || rawText.includes("210.14.") || rawText.includes("218.105.") || rawText.includes("210.51.")) {
@@ -213,7 +231,7 @@
                 domesticTag = "科技网 CSTNET (AS5009)";
             }
 
-            return { route: domesticTag, isDirect: typeTag === "直连", transit: uniqueTransit };
+            return { route: domesticTag, isDirect: typeTag === "直连", transit: uniqueTransit, geoPath: uniqueGeo };
         }
 
         function parseLocation(url) {
@@ -348,7 +366,7 @@
                         rowWrapper.className = "group border border-gray-100 bg-gray-50/30 rounded-lg p-2.5 cursor-pointer hover:bg-gray-50 transition";
                         rowWrapper.setAttribute("onclick", `toggleAccordion('log_${uniqueId}')`);
                         
-                        // 强制一行显示的 UI 布局
+                        // 强制单行显示的 UI 布局
                         rowWrapper.innerHTML = `
                             <div class="flex items-center justify-between w-full gap-2">
                                 <div class="flex items-center space-x-2 text-sm text-gray-700 whitespace-nowrap overflow-hidden">
@@ -386,14 +404,27 @@
                             const analysis = analyzeRoute(rawText);
                             const latency = extractLatency(rawText);
                             
-                            // 生成标签，加入 whitespace-nowrap 防止折行
+                            // 生成标签 (追加 whitespace-nowrap 防止折行)
                             const typeBadge = analysis.isDirect 
                                 ? `<span class="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded whitespace-nowrap">直连</span>` 
                                 : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap">中转: ${analysis.transit.join(',')}</span>`;
                             const latencyBadge = `<span class="text-gray-500 font-mono w-14 text-right inline-block whitespace-nowrap">${latency}</span>`;
 
-                            document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} <span class="text-gray-700 font-medium ml-1 mr-2 whitespace-nowrap">${analysis.route}</span> ${latencyBadge}`;
+                            // 地理节点绕路预警机制
+                            let geoBadge = "";
+                            let exportGeo = "";
+                            if (analysis.geoPath.length > 0) {
+                                // 若标榜直连且途经美、欧、澳、中东、俄等极远节点，即触发绕路警报
+                                const isDetour = (analysis.isDirect && (analysis.geoPath.includes("🇺🇸美洲") || analysis.geoPath.includes("🇪🇺欧洲") || analysis.geoPath.includes("🇦🇺澳洲") || analysis.geoPath.includes("🇷🇺俄罗斯") || analysis.geoPath.includes("🇦🇪中东")));
+                                const geoColor = isDetour ? "text-red-600 bg-red-50 border-red-200" : "text-gray-500 bg-gray-50 border-gray-200";
+                                const geoIcon = isDetour ? "⚠️ 物理绕路:" : "📍 途径:";
+                                geoBadge = `<span class="${geoColor} border px-1.5 py-0.5 rounded whitespace-nowrap text-[10px] ml-1">${geoIcon} ${analysis.geoPath.join('➔')}</span>`;
+                                exportGeo = isDetour ? ` [绕路: ${analysis.geoPath.join('➔')}]` : ` [途径: ${analysis.geoPath.join('➔')}]`;
+                            }
 
+                            document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} ${geoBadge} <span class="text-gray-700 font-medium ml-1 mr-2 whitespace-nowrap">${analysis.route}</span> ${latencyBadge}`;
+
+                            // 清洗格式保证日志的竖排纯净度
                             let formattedLog = rawText;
                             try {
                                 let parsed = JSON.parse(rawText);
@@ -405,8 +436,8 @@
                             }
                             document.getElementById(`log_${uniqueId}`).querySelector('pre').innerText = formattedLog || "无详细文本。";
 
-                            // 数据存入导出池
-                            exportData.push(`[${locationKey}] ${actualNodeName} ${isp.name} -> ${analysis.isDirect ? '直连' : '中转('+analysis.transit.join(',')+ ')'} | ${analysis.route} | 延迟: ${latency}`);
+                            // 数据存入导出池 (携带地理嗅探结果)
+                            exportData.push(`[${locationKey}] ${actualNodeName} ${isp.name} -> ${analysis.isDirect ? '直连' : '中转('+analysis.transit.join(',')+ ')'}${exportGeo} | ${analysis.route} | 延迟: ${latency}`);
 
                         } catch (error) {
                             document.getElementById(`status_${uniqueId}`).innerHTML = `<span class="text-red-500">探测失败</span>`;
