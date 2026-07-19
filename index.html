@@ -3,98 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>万能 VPS 多节点回程路由自动化评测系统</title>
-    <!-- 引入高颜值 Tailwind CSS -->
+    <title>VPS 跨境路由综合测绘平台</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800 antialiased p-6">
 
     <div class="max-w-7xl mx-auto">
         <!-- 表头 -->
-        <header class="mb-8 text-center md:text-left">
-            <h1 class="text-3xl font-extrabold text-indigo-600 mb-2">⚡ 万能 VPS 回程路由全景分析矩阵</h1>
-            <p class="text-gray-500 text-sm">智能 Payload 逆向转化技术 · 级联日志手风琴 · 内置跨境网络黑话词典</p>
+        <header class="mb-8 border-b border-gray-200 pb-4 flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-1">VPS 跨境路由综合测绘平台</h1>
+                <p class="text-gray-500 text-sm">支持多节点并发排队 · 动态 Payload 模板 · 客观网络链路分析</p>
+            </div>
+            <!-- 新增：一键导出结果按钮 -->
+            <button id="exportBtn" onclick="exportResults()" class="hidden text-sm bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow transition">
+                📋 复制纯文本报告
+            </button>
         </header>
 
-        <hr class="border-gray-200 mb-8">
-
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- 左侧控制面板与科普区 -->
+            <!-- 左侧控制面板与术语说明 -->
             <div class="lg:col-span-1 space-y-6">
                 <!-- API 输入 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">第一步：填写 Looking Glass API 地址 (每行一个)</label>
-                    <textarea id="apiUrls" rows="2" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-xs" placeholder="https://lg-sg-singapore.rabisu.com/lg-api.php"></textarea>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">1. 节点 Looking Glass API (每行一个)</label>
+                    <textarea id="apiUrls" rows="2" class="w-full p-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-500 font-mono text-xs" placeholder="https://lg-sg-singapore.rabisu.com/lg-api.php"></textarea>
                 </div>
 
-                <!-- 升级：万能 Payload 模板配置与智能转换器 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+                <!-- Payload 模板 -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-3">
                     <div class="flex items-center justify-between">
-                        <label class="text-sm font-bold text-gray-700">第二步：配置 Payload 模板</label>
-                        <button type="button" onclick="smartConvertPayload()" class="text-[10px] bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-2.5 py-1 rounded-md font-semibold shadow-sm hover:from-indigo-600 transition duration-150">
-                            ✨ 智能净化转换
+                        <label class="text-sm font-semibold text-gray-700">2. 接口 Payload 模板</label>
+                        <button type="button" onclick="smartConvertPayload()" class="text-[11px] bg-blue-50 text-blue-600 px-2.5 py-1 rounded border border-blue-100 hover:bg-blue-100 transition">
+                            格式规范化转换
                         </button>
                     </div>
-                    <textarea id="payloadTemplate" rows="4" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-xs bg-gray-900 text-green-400" placeholder="直接粘贴从F12里抓到的原始Payload对象..."></textarea>
-                    <p class="text-[10px] text-gray-400">💡 **高阶玩法**：直接把抓包出来的垃圾数据粘进去，点击“智能净化转换”，系统会自动补齐双引号并用 <code class="text-indigo-600 font-bold">{{IP}}</code> 和 <code class="text-indigo-600 font-bold">{{LOC}}</code> 替代变量。</p>
+                    <textarea id="payloadTemplate" rows="4" class="w-full p-3 border border-gray-200 rounded-lg font-mono text-xs bg-gray-50 text-gray-700" placeholder="粘贴原始请求对象..."></textarea>
+                    <p class="text-[11px] text-gray-500">注：填入原始对象后点击转换，系统将自动匹配 <code class="text-blue-600 font-semibold">{{IP}}</code> 与 <code class="text-blue-600 font-semibold">{{LOC}}</code> 变量。</p>
                 </div>
 
-                <!-- 城市选择与自定义IP -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <label class="block text-sm font-bold text-gray-700 mb-3">第三步：选择测试目标 (内置枢纽或个性化定制)</label>
-                    <div id="cityContainer" class="space-y-2 max-h-40 overflow-y-auto pr-2 text-sm mb-2">
-                        <!-- 由 JS 动态渲染内置城市单选框 -->
+                <!-- 测试目标 (调整为多选复选框) -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm font-semibold text-gray-700">3. 测试目标大区 (支持多选)</label>
+                        <button type="button" onclick="selectAllCities()" class="text-[11px] text-gray-500 hover:text-gray-800">全选/反选</button>
+                    </div>
+                    <div id="cityContainer" class="space-y-2 max-h-48 overflow-y-auto pr-2 text-sm mb-2 border border-gray-100 rounded p-2 bg-gray-50">
+                        <!-- 动态渲染 -->
                     </div>
 
-                    <!-- 动态抽屉：自定义 IP 输入框 -->
-                    <div id="customIPInputs" class="mt-4 p-4 bg-indigo-50/50 rounded-xl space-y-3 hidden border border-indigo-100">
-                        <div class="flex items-center justify-between border-b border-indigo-100 pb-2 mb-2">
-                            <p class="text-xs text-indigo-600 font-bold">🛠️ 个性化测试目标 IP：</p>
-                            <button type="button" id="detectBtn" onclick="detectLocalIP()" class="text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded-md font-semibold">
-                                <span>🌐 一键识别本机 IP</span>
+                    <div id="customIPInputs" class="mt-3 p-3 bg-white border border-gray-200 rounded-lg space-y-3 hidden">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+                            <p class="text-xs text-gray-700 font-semibold">自定义测试目标</p>
+                            <button type="button" id="detectBtn" onclick="detectLocalIP()" class="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded">
+                                获取本机 IP
                             </button>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-medium text-gray-500 mb-1">测试 目标一 (电信轴/当前网)</label>
-                            <input type="text" id="customTelecom" class="w-full p-2 border border-gray-200 rounded-lg text-xs font-mono focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-medium text-gray-500 mb-1">测试 目标二 (联通轴/当前网)</label>
-                            <input type="text" id="customUnicom" class="w-full p-2 border border-gray-200 rounded-lg text-xs font-mono focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-medium text-gray-500 mb-1">测试 目标三 (移动轴/当前网)</label>
-                            <input type="text" id="customMobile" class="w-full p-2 border border-gray-200 rounded-lg text-xs font-mono focus:outline-none">
+                        <div class="grid grid-cols-1 gap-2">
+                            <input type="text" id="customTelecom" class="w-full p-2 border border-gray-200 rounded text-xs font-mono" placeholder="电信目标 IP">
+                            <input type="text" id="customUnicom" class="w-full p-2 border border-gray-200 rounded text-xs font-mono" placeholder="联通目标 IP">
+                            <input type="text" id="customMobile" class="w-full p-2 border border-gray-200 rounded text-xs font-mono" placeholder="移动目标 IP">
                         </div>
                     </div>
                 </div>
 
-                <!-- 触发按钮 -->
-                <button id="runBtn" onclick="startAnalysis()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-md shadow-indigo-100 flex items-center justify-center space-x-2 transition">
-                    <span>🔥 开始批量回程分析</span>
+                <!-- 执行按钮 -->
+                <button id="runBtn" onclick="startAnalysis()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-sm transition">
+                    开始路由测绘
                 </button>
 
-                <!-- 新增模块：跨境网络黑话词典科普 -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-                    <h3 class="text-sm font-bold text-gray-800 flex items-center space-x-1 border-b border-gray-100 pb-2">
-                        <span>📖 跨境网络黑话百科指南</span>
+                <!-- 客观术语说明模块 -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
+                    <h3 class="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
+                        线路术语说明参考
                     </h3>
-                    <div class="space-y-3 text-xs max-h-64 overflow-y-auto pr-1">
+                    <div class="space-y-4 text-xs max-h-64 overflow-y-auto text-gray-600 leading-relaxed pr-2">
                         <div>
-                            <span class="font-bold text-red-500">🔴 电信 163 网 (AS4134)：</span>
-                            <p class="text-gray-500 mt-0.5 leading-relaxed">中国最普及、带宽最大的普通民用网络。特点是**白天极速直连，晚高峰大面积断流丢包**。除非有针对性的扩容，否则晚上很容易卡死。</p>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">路由机制</h4>
+                            <p><strong>直连路由：</strong> 海外节点至国内骨干网无第三方国家节点周转，物理延迟通常为该地域理论最低值。</p>
+                            <p class="mt-1"><strong>国际中转：</strong> 经由 NTT、Cogent、PCCW 等国际一级运营商网络进行跨国数据交换，会增加网络跳数与理论延迟。</p>
                         </div>
                         <div>
-                            <span class="font-bold text-indigo-600">💎 联通 AS9929 精品线：</span>
-                            <p class="text-gray-500 mt-0.5 leading-relaxed">高端政企精品专线，前身是网通 A 网。特点是负载极低、几乎不丢包，**全天候晚高峰焊死低延迟**。属于网络世界里的 VIP 包厢。</p>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">优化/精品网络</h4>
+                            <p><strong>电信 CN2 GIA (AS4809)：</strong> 电信下一代承载网高级选项，具备独立跨境链路，拥堵率极低。</p>
+                            <p class="mt-1"><strong>联通 CUII (AS9929)：</strong> 联通工业界别网络，对等互联带宽充裕，常用于政企或高质量传输需求。</p>
+                            <p class="mt-1"><strong>移动 CMIN2 (AS58807)：</strong> 移动高阶路由网络，提供相较普通 CMNET 更优的晚高峰保障。</p>
                         </div>
                         <div>
-                            <span class="font-bold text-green-600">🚀 移动 CMI 直连 (AS58453)：</span>
-                            <p class="text-gray-500 mt-0.5 leading-relaxed">中国移动出海的核心正牌官方航线。在香港和美西拥有恐怖的带宽储备，对亚太及美西直连机器极度友好，晚高峰抗压能力极强。</p>
-                        </div>
-                        <div>
-                            <span class="font-bold text-amber-500">🇯🇵 国际中转 (Transit)：</span>
-                            <p class="text-gray-500 mt-0.5 leading-relaxed">由于机房没有直接拉通中国的海缆，数据在回国前必须先经过第三方国际大鳄（如 **NTT**、**Cogent**）租借的公共管网进行中转。中转会额外增加跳数和延迟，且极易在晚高峰被随大流的拥堵流量波及。</p>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">公众骨干网络</h4>
+                            <p><strong>电信 163 (AS4134) / 联通 169 (AS4837) / 移动 CMNET (AS9808)：</strong> 三大运营商基础公众骨干网。承载超 90% 的民用数据，国际出口在高峰时段（20:00-23:00）存在常规拥堵及丢包现象。</p>
                         </div>
                     </div>
                 </div>
@@ -102,282 +99,316 @@
 
             <!-- 右侧结果展示区 -->
             <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[500px]">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[500px]">
                     <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-                        <h2 class="text-lg font-bold text-gray-800">📊 综合评测报告输出</h2>
-                        <span id="statusLabel" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">就绪</span>
+                        <h2 class="text-base font-semibold text-gray-800">测试结果视图</h2>
+                        <span id="statusLabel" class="text-xs px-2.5 py-1 rounded bg-gray-100 text-gray-500">等待执行</span>
                     </div>
                     
-                    <!-- 动态状态条 -->
-                    <div id="progressBar" class="w-full bg-gray-100 h-1.5 rounded-full mb-4 hidden">
-                        <div id="progressInner" class="bg-indigo-600 h-1.5 rounded-full w-0 transition-all duration-300"></div>
+                    <div id="progressBar" class="w-full bg-gray-100 h-1 rounded-full mb-4 hidden">
+                        <div id="progressInner" class="bg-blue-500 h-1 rounded-full w-0 transition-all duration-300"></div>
                     </div>
 
-                    <!-- 报告卡片容器 -->
-                    <div id="reportContainer" class="space-y-6">
-                        <p class="text-gray-400 text-center py-16 text-sm">暂无数据，请在左侧配置参数并点击开始。</p>
+                    <div id="reportContainer" class="space-y-4">
+                        <p class="text-gray-400 text-center py-16 text-sm">暂无数据，请配置参数后执行测绘。</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 核心逻辑脚本 -->
     <script>
         const ipDatabase = {
             "北京核心网 (华北枢纽)": { telecom: "219.141.140.10", unicom: "202.106.195.68", mobile: "221.179.155.161" },
             "上海核心网 (华东枢纽)": { telecom: "202.96.209.133", unicom: "210.22.97.1", mobile: "211.136.112.200" },
-            "广州核心网 (华南枢纽)": { telecom: "58.60.188.222", unicom: "210.21.196.6", mobile: "120.196.165.24" }
+            "广州核心网 (华南枢纽)": { telecom: "58.60.188.222", unicom: "210.21.196.6", mobile: "120.196.165.24" },
+            "成都枢纽网 (西南枢纽)": { telecom: "61.139.2.69", unicom: "119.6.6.6", mobile: "211.137.96.205" },
+            "武汉枢纽网 (华中枢纽)": { telecom: "202.103.24.68", unicom: "211.91.224.68", mobile: "211.137.58.225" },
+            "西安枢纽网 (西北枢纽)": { telecom: "218.30.19.40", unicom: "221.11.1.68", mobile: "211.137.130.225" },
+            "沈阳枢纽网 (东北枢纽)": { telecom: "219.148.204.10", unicom: "119.118.10.10", mobile: "211.137.32.225" }
         };
 
-        // 智能净化变模组引擎：完美吞噬乱七八糟的 JS 原始对象文本并输出标准 JSON 变量模板
+        // 全局变量，用于存储结构化数据以供导出
+        let exportData = [];
+
         function smartConvertPayload() {
             const el = document.getElementById("payloadTemplate");
             let rawText = el.value.trim();
-            if (!rawText) return alert("请先贴入抓包拿到的原始 Payload 文本内容！");
+            if (!rawText) return;
 
             try {
-                // 1. 规避非标准 JS 对象的键名无双引号问题 (例如把 host: 变成 "host":)
-                let formatted = rawText
-                    .replace(/([{,])\s*([a-zA-Z0-9_-]+)\s*:/g, '$1"$2":') // 修复键名双引号
-                    .replace(/'/g, '"'); // 将单引号统一洗成双引号
-                
-                // 2. 匹配并全自动用万能占位符替换变量
+                let formatted = rawText.replace(/([{,])\s*([a-zA-Z0-9_-]+)\s*:/g, '$1"$2":').replace(/'/g, '"'); 
                 const ipRegex = /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g;
                 formatted = formatted.replace(ipRegex, "{{IP}}");
 
                 const commonLocs = ["singapore", "london", "los-angeles", "germany", "frankfurt", "sofia", "istanbul"];
                 commonLocs.forEach(loc => {
-                    const locRegex = new RegExp(`"${loc}"`, 'gi');
-                    formatted = formatted.replace(locRegex, '"{{LOC}}"');
+                    formatted = formatted.replace(new RegExp(`"${loc}"`, 'gi'), '"{{LOC}}"');
                 });
 
-                // 3. 校验并优雅缩进格式化
-                const jsonObj = JSON.parse(formatted);
-                el.value = JSON.stringify(jsonObj, null, 2);
-                alert("✨ Payload 智能格式修复并变量转化成功！已处于就绪状态。");
+                el.value = JSON.stringify(JSON.parse(formatted), null, 2);
             } catch (e) {
-                // 如果遭遇深度非标准数据，采用底层模糊兜底正则置换法
-                let fallback = rawText
-                    .replace(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g, "{{IP}}")
-                    .replace(/"(singapore|london|los-angeles|germany)"/gi, '"{{LOC}}"');
-                el.value = fallback;
-                alert("⚠️ 格式过于奇葩已转为兜底正则模式替换，请手动微调。");
+                el.value = rawText.replace(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g, "{{IP}}").replace(/"(singapore|london|los-angeles|germany)"/gi, '"{{LOC}}"');
             }
         }
 
+        // 提取最终延迟 (利用正则抓取追踪结果中最后的 ms 数值)
+        function extractLatency(rawText) {
+            const msRegex = /([0-9.]+)\s*ms/g;
+            let match;
+            let lastLatency = null;
+            while ((match = msRegex.exec(rawText)) !== null) {
+                lastLatency = parseFloat(match[1]);
+            }
+            return lastLatency ? `${lastLatency.toFixed(1)}ms` : '未知';
+        }
+
+        // 客观化的结果解析模块
         function analyzeRoute(rawText) {
-            if (!rawText) return "❌ 探测失败 / 接口无响应";
-            let report = [];
-            if (rawText.includes("9929") || rawText.includes("CUII")) report.push("💎 联通 AS9929 精品专线");
-            else if (rawText.includes("58453") || rawText.includes("CMI")) report.push("🚀 移动正牌 CMI 直连航线");
-            else if (rawText.includes("4837")) report.push("🥈 联通 4837 普通民用直连");
-            else if (rawText.includes("4134") || rawText.includes("202.97")) report.push("🛑 电信 163 普通骨干网");
-            else if (rawText.includes("9808")) report.push("🟢 移动普通 CMNET 线路");
-            else report.push("⚠️ 传统 BGP 混合国际公网");
+            if (!rawText) return { route: "探测无响应", isDirect: false, transit: [] };
+            
+            let typeTag = "直连";
+            let domesticTag = "未知线路";
+            let transitGates = [];
 
-            if (rawText.includes("gin.ntt.net")) report.push("🇯🇵 经由日本 NTT 中转");
-            if (rawText.includes("cogentco.com")) report.push("🚌 经由 Cogent 欧洲大巴中转");
-            if (rawText.includes("retn.net")) report.push("⚡ 经由 RETN 欧洲高速骨干中转");
-            if (rawText.includes("comcast")) report.push("🇺🇸 经由美西 Comcast 本地移交");
+            if (rawText.includes("gin.ntt.net")) transitGates.push("NTT");
+            if (rawText.includes("cogentco.com")) transitGates.push("Cogent");
+            if (rawText.includes("retn.net")) transitGates.push("RETN");
+            if (rawText.includes("comcast")) transitGates.push("Comcast");
+            if (rawText.includes("gtt.net")) transitGates.push("GTT");
+            if (rawText.includes("tatacommunications")) transitGates.push("Tata");
+            if (rawText.includes("pccw")) transitGates.push("PCCW");
 
-            return report.join(" | ");
+            if (transitGates.length > 0) typeTag = `国际中转`;
+
+            if (rawText.includes("4809") || rawText.includes("CN2")) domesticTag = "电信 CN2 GIA (AS4809)";
+            else if (rawText.includes("9929") || rawText.includes("CUII")) domesticTag = "联通 CUII (AS9929)";
+            else if (rawText.includes("58807") || rawText.includes("CMIN2")) domesticTag = "移动 CMIN2 (AS58807)";
+            else if (rawText.includes("4837")) domesticTag = "联通 169 (AS4837)";
+            else if (rawText.includes("4134") || rawText.includes("202.97")) domesticTag = "电信 163 (AS4134)";
+            else if (rawText.includes("58453") || rawText.includes("CMI")) domesticTag = "移动 CMI (AS58453)";
+            else if (rawText.includes("9808")) domesticTag = "移动 CMNET (AS9808)";
+
+            return { route: domesticTag, isDirect: typeTag === "直连", transit: transitGates };
         }
 
         function parseLocation(url) {
             try {
                 const hostname = new URL(url).hostname;
-                if (hostname.includes("singapore")) return "singapore";
-                if (hostname.includes("la") || hostname.includes("los-angeles")) return "los-angeles";
-                if (hostname.includes("london")) return "london";
-                if (hostname.includes("germany")) return "germany";
-                return "default";
-            } catch (e) { return "singapore"; }
+                const match = hostname.match(/-(sg|singapore|la|los-angeles|london|de|germany|jp|tokyo)/i);
+                return match ? match[1].toUpperCase() : "DEFAULT";
+            } catch (e) { return "DEFAULT"; }
         }
 
-        // 切换手风琴二级菜单状态
         function toggleAccordion(id) {
             const target = document.getElementById(id);
             const arrow = document.getElementById('arrow_' + id.split('log_')[1]);
-            if (target.classList.contains('hidden')) {
-                target.classList.remove('hidden');
-                arrow.style.transform = 'rotate(180deg)';
-            } else {
-                target.classList.add('hidden');
-                arrow.style.transform = 'rotate(0deg)';
-            }
+            target.classList.toggle('hidden');
+            arrow.style.transform = target.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
         }
 
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
-        // 初始化渲染城市列表
+        // 渲染多选框
         const container = document.getElementById("cityContainer");
         Object.keys(ipDatabase).forEach((cityName, index) => {
             const div = document.createElement("div");
-            div.className = "flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg transition cursor-pointer";
+            div.className = "flex items-center space-x-2";
             div.innerHTML = `
-                <input type="radio" id="city_${index}" name="targetCity" value="${cityName}" ${index === 0 ? 'checked' : ''} class="h-4 w-4 text-indigo-600 border-gray-300" onchange="toggleCustomInputs(false)">
-                <label for="city_${index}" class="font-medium text-gray-700 cursor-pointer w-full">${cityName}</label>
+                <input type="checkbox" id="city_${index}" name="targetCity" value="${cityName}" ${index === 0 ? 'checked' : ''} class="h-3.5 w-3.5 text-blue-600 rounded border-gray-300">
+                <label for="city_${index}" class="text-gray-700 cursor-pointer w-full">${cityName}</label>
             `;
             container.appendChild(div);
         });
 
         const customDiv = document.createElement("div");
-        customDiv.className = "flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg transition cursor-pointer border-t border-gray-100 mt-2 pt-2";
+        customDiv.className = "flex items-center space-x-2 border-t border-gray-200 mt-2 pt-2";
         customDiv.innerHTML = `
-            <input type="radio" id="city_custom" name="targetCity" value="CUSTOM_MODE" class="h-4 w-4 text-indigo-600 border-gray-300" onchange="toggleCustomInputs(true)">
-            <label for="city_custom" class="font-bold text-indigo-600 cursor-pointer w-full">🛠️ 自定义测试 IP</label>
+            <input type="checkbox" id="city_custom" name="targetCity" value="CUSTOM_MODE" class="h-3.5 w-3.5 text-blue-600 rounded border-gray-300" onchange="document.getElementById('customIPInputs').classList.toggle('hidden', !this.checked)">
+            <label for="city_custom" class="font-semibold text-gray-700 cursor-pointer w-full">自定义目标 IP</label>
         `;
         container.appendChild(customDiv);
 
-        function toggleCustomInputs(show) {
-            document.getElementById("customIPInputs").classList.toggle("hidden", !show);
+        let allSelected = false;
+        function selectAllCities() {
+            allSelected = !allSelected;
+            document.querySelectorAll('input[name="targetCity"]').forEach(cb => {
+                if(cb.value !== "CUSTOM_MODE") cb.checked = allSelected;
+            });
         }
 
         async function detectLocalIP() {
             const btn = document.getElementById("detectBtn");
-            btn.disabled = true; btn.innerText = "🔍 识别中...";
+            btn.innerText = "获取中...";
             try {
                 const res = await fetch("https://api.ipify.org?format=json");
                 const data = await res.json();
                 document.getElementById("customTelecom").value = data.ip;
                 document.getElementById("customUnicom").value = data.ip;
                 document.getElementById("customMobile").value = data.ip;
-                btn.innerText = "✅ 成功";
-            } catch (e) { btn.innerText = "❌ 失败"; }
-            setTimeout(() => { btn.innerText = "🌐 一键识别本机 IP"; btn.disabled = false; }, 1500);
+                btn.innerText = "成功";
+            } catch (e) { btn.innerText = "失败"; }
+            setTimeout(() => btn.innerText = "获取本机 IP", 1500);
         }
 
-        // 默认初始化填入 Rabisu 的标准 Payload 作为默认友好背景板
         document.getElementById("payloadTemplate").value = JSON.stringify({"command": "traceroute", "host": "{{IP}}", "location": "{{LOC}}"}, null, 2);
 
         async function startAnalysis() {
             const apiText = document.getElementById("apiUrls").value.trim();
             const templateText = document.getElementById("payloadTemplate").value.trim();
-            if (!apiText) return alert("请填写 Looking Glass API 地址！");
-            if (!templateText) return alert("请配置 Payload 模板！");
+            if (!apiText || !templateText) return;
             
             const apis = apiText.split("\n").map(url => url.trim()).filter(url => url);
-            const selectedCity = document.querySelector('input[name="targetCity"]:checked').value;
             
-            let targetIPs = selectedCity === "CUSTOM_MODE" ? 
-                { telecom: document.getElementById("customTelecom").value.trim(), unicom: document.getElementById("customUnicom").value.trim(), mobile: document.getElementById("customMobile").value.trim() } : 
-                ipDatabase[selectedCity];
-
-            if (!targetIPs.telecom || !targetIPs.unicom || !targetIPs.mobile) return alert("测试IP不完整！");
+            // 获取所有勾选的城市选项
+            const selectedNodes = Array.from(document.querySelectorAll('input[name="targetCity"]:checked')).map(cb => cb.value);
+            if(selectedNodes.length === 0) return alert("请至少选择一个测试目标！");
 
             const btn = document.getElementById("runBtn");
             const statusLabel = document.getElementById("statusLabel");
-            const progressContainer = document.getElementById("progressBar");
             const progressInner = document.getElementById("progressInner");
             const reportContainer = document.getElementById("reportContainer");
+            const exportBtn = document.getElementById("exportBtn");
 
             btn.disabled = true;
-            btn.className = "w-full bg-gray-400 text-white font-bold py-3 px-6 rounded-xl cursor-not-allowed flex items-center justify-center space-x-2";
-            statusLabel.innerText = "正在探测中...";
-            progressContainer.classList.remove("hidden");
+            btn.className = "w-full bg-gray-400 text-white font-semibold py-3 px-6 rounded-xl cursor-not-allowed";
+            statusLabel.innerText = "测绘中...";
+            document.getElementById("progressBar").classList.remove("hidden");
             reportContainer.innerHTML = ""; 
+            exportBtn.classList.add("hidden");
+            exportData = []; // 清空导出缓存
 
             const isps = [
-                { key: "telecom", name: "线路一 (电信轴)", icon: "🔵" },
-                { key: "unicom", name: "线路二 (联通轴)", icon: "🔴" },
-                { key: "mobile", name: "线路三 (移动轴)", icon: "🟢" }
+                { key: "telecom", name: "中国电信" },
+                { key: "unicom", name: "中国联通" },
+                { key: "mobile", name: "中国移动" }
             ];
 
-            const totalSteps = apis.length * isps.length;
+            const totalSteps = apis.length * selectedNodes.length * isps.length;
             let currentStep = 0;
 
             for (let i = 0; i < apis.length; i++) {
                 const apiUrl = apis[i];
                 const locationKey = parseLocation(apiUrl);
-
+                
                 const card = document.createElement("div");
-                card.className = "bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-3";
+                card.className = "bg-white p-5 rounded-xl border border-gray-200 space-y-4";
                 card.innerHTML = `
                     <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-                        <h3 class="font-bold text-indigo-700 text-xs md:text-sm break-all">📍 节点: ${apiUrl}</h3>
-                        <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded font-mono uppercase">${locationKey}</span>
+                        <h3 class="font-semibold text-gray-800 text-sm">节点: <span class="font-normal text-gray-600">${apiUrl}</span></h3>
+                        <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">${locationKey}</span>
                     </div>
-                    <div id="results_pool_${i}" class="space-y-3 text-xs md:text-sm"></div>
+                    <div id="results_pool_${i}" class="space-y-3"></div>
                 `;
                 reportContainer.appendChild(card);
                 const pool = document.getElementById(`results_pool_${i}`);
 
-                for (let j = 0; j < isps.length; j++) {
-                    const isp = isps[j];
-                    const targetIP = targetIPs[isp.key];
-                    const uniqueId = `${i}_${j}`;
+                for (let c = 0; c < selectedNodes.length; c++) {
+                    const nodeName = selectedNodes[c];
+                    let targetIPs = nodeName === "CUSTOM_MODE" ? 
+                        { telecom: document.getElementById("customTelecom").value, unicom: document.getElementById("customUnicom").value, mobile: document.getElementById("customMobile").value } : 
+                        ipDatabase[nodeName];
+                    
+                    const actualNodeName = nodeName === "CUSTOM_MODE" ? "自定义 IP" : nodeName.split(" ")[0];
 
-                    // 升级：结果卡片内嵌入一个可点击的高级手风琴结构组件
-                    const rowWrapper = document.createElement("div");
-                    rowWrapper.className = "group border border-gray-200/50 hover:border-indigo-200 rounded-xl bg-gray-50/50 p-3 transition duration-150 cursor-pointer";
-                    rowWrapper.setAttribute("onclick", `toggleAccordion('log_${uniqueId}')`);
-                    rowWrapper.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2 font-semibold text-gray-700">
-                                <span>${isp.icon} ${isp.name}</span>
-                                <span class="text-[10px] text-gray-400 font-mono font-normal">(${targetIP})</span>
+                    for (let j = 0; j < isps.length; j++) {
+                        const isp = isps[j];
+                        const targetIP = targetIPs[isp.key];
+                        if(!targetIP) { currentStep++; continue; }
+
+                        const uniqueId = `${i}_${c}_${j}`;
+                        const rowWrapper = document.createElement("div");
+                        rowWrapper.className = "group border border-gray-100 bg-gray-50/30 rounded-lg p-2.5 cursor-pointer hover:bg-gray-50";
+                        rowWrapper.setAttribute("onclick", `toggleAccordion('log_${uniqueId}')`);
+                        rowWrapper.innerHTML = `
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                <div class="flex items-center space-x-2 text-sm text-gray-700 min-w-[200px]">
+                                    <span class="font-medium w-16">${actualNodeName}</span>
+                                    <span class="text-gray-400 text-xs">|</span>
+                                    <span>${isp.name}</span>
+                                    <span class="text-[10px] text-gray-400 font-mono">(${targetIP})</span>
+                                </div>
+                                <div class="flex items-center space-x-3 text-xs">
+                                    <div id="status_${uniqueId}" class="text-gray-400">正在追踪...</div>
+                                    <svg id="arrow_${uniqueId}" class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <div id="status_${uniqueId}" class="text-gray-400 italic">正在请求机房测序...</div>
-                                <svg id="arrow_${uniqueId}" class="w-4 h-4 text-gray-400 transition-transform duration-200 group-hover:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <div id="log_${uniqueId}" class="hidden mt-3 pt-2 border-t border-gray-100">
+                                <pre class="bg-gray-800 text-gray-200 font-mono text-[11px] p-3 rounded overflow-x-auto max-h-64 leading-relaxed"></pre>
                             </div>
-                        </div>
-                        <!-- 二级下拉菜单：承载机房原始原装完整日志 -->
-                        <div id="log_${uniqueId}" class="hidden mt-3 pt-3 border-t border-gray-200/60 transition-all">
-                            <pre class="bg-gray-900 text-green-400 font-mono text-[11px] p-3 rounded-xl overflow-x-auto max-h-64 border border-gray-800 shadow-inner">正在等待大区数据回传...</pre>
-                        </div>
-                    `;
-                    pool.appendChild(rowWrapper);
+                        `;
+                        pool.appendChild(rowWrapper);
 
-                    try {
-                        let processedPayloadStr = templateText
-                            .replace("{{IP}}", targetIP)
-                            .replace("{{LOC}}", locationKey);
+                        try {
+                            let processedPayloadStr = templateText.replace("{{IP}}", targetIP).replace("{{LOC}}", locationKey);
+                            let headers = {};
+                            let bodyData = processedPayloadStr;
+                            
+                            if (processedPayloadStr.trim().startsWith("{")) {
+                                headers["Content-Type"] = "application/json";
+                                bodyData = JSON.stringify(JSON.parse(processedPayloadStr));
+                            } else {
+                                headers["Content-Type"] = "application/x-www-form-urlencoded";
+                            }
 
-                        let headers = {};
-                        let bodyData = processedPayloadStr;
-                        
-                        if (processedPayloadStr.trim().startsWith("{")) {
-                            headers["Content-Type"] = "application/json";
-                            bodyData = JSON.stringify(JSON.parse(processedPayloadStr));
-                        } else {
-                            headers["Content-Type"] = "application/x-www-form-urlencoded";
+                            const response = await fetch(apiUrl, { method: "POST", headers: headers, body: bodyData });
+                            const rawText = await response.text();
+                            
+                            const analysis = analyzeRoute(rawText);
+                            const latency = extractLatency(rawText);
+                            
+                            // 渲染标签 UI
+                            const typeBadge = analysis.isDirect 
+                                ? `<span class="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">直连</span>` 
+                                : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">中转: ${analysis.transit.join(',')}</span>`;
+                            const latencyBadge = `<span class="text-gray-500 font-mono w-14 text-right inline-block">${latency}</span>`;
+
+                            document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} <span class="text-gray-700 font-medium ml-1 mr-2">${analysis.route}</span> ${latencyBadge}`;
+
+                            // 清洗格式
+                            let formattedLog = rawText;
+                            try {
+                                let parsed = JSON.parse(rawText);
+                                formattedLog = Array.isArray(parsed) ? parsed.join('\n') : (parsed.output || parsed.result || JSON.stringify(parsed, null, 2));
+                            } catch(e) {
+                                if (!rawText.includes('\n') && /1\s+\d+/.test(rawText)) {
+                                    formattedLog = rawText.replace(/(\s+)(\d+\s+\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b|\s+\d+\s+[^0-9])/g, '\n$2');
+                                }
+                            }
+                            document.getElementById(`log_${uniqueId}`).querySelector('pre').innerText = formattedLog || "无详细文本。";
+
+                            // 推入导出数据池
+                            exportData.push(`[${locationKey}] ${actualNodeName} ${isp.name} -> ${analysis.isDirect ? '直连' : '中转('+analysis.transit.join(',')+ ')'} | ${analysis.route} | 延迟: ${latency}`);
+
+                        } catch (error) {
+                            document.getElementById(`status_${uniqueId}`).innerHTML = `<span class="text-red-500">探测失败</span>`;
+                            document.getElementById(`log_${uniqueId}`).querySelector('pre').innerText = error.message;
                         }
 
-                        const response = await fetch(apiUrl, {
-                            method: "POST",
-                            headers: headers,
-                            body: bodyData
-                        });
-
-                        const rawText = await response.text();
-                        const analysisResult = analyzeRoute(rawText);
-
-                        // 1. 更新主状态简报
-                        const statusBox = document.getElementById(`status_${uniqueId}`);
-                        statusBox.className = "text-gray-700 font-bold text-right font-sans";
-                        statusBox.innerHTML = `<span>${analysisResult}</span>`;
-
-                        // 2. 将原始回程路由日志完整注入到二级菜单里
-                        const preBox = document.getElementById(`log_${uniqueId}`).querySelector('pre');
-                        preBox.innerText = rawText || "机房成功接收请求，但未返回详细文本。";
-
-                    } catch (error) {
-                        document.getElementById(`status_${uniqueId}`).className = "text-red-500 font-medium";
-                        document.getElementById(`status_${uniqueId}`).innerText = "❌ 探测失败";
-                        document.getElementById(`log_${uniqueId}`).querySelector('pre').innerText = "错误详情:\n" + error.message;
+                        currentStep++;
+                        progressInner.style.width = `${(currentStep / totalSteps) * 100}%`;
+                        await delay(800);
                     }
-
-                    currentStep++;
-                    progressInner.style.width = `${(currentStep / totalSteps) * 100}%`;
-                    await delay(800);
                 }
             }
 
             btn.disabled = false;
-            btn.className = "w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-md shadow-indigo-100 flex items-center justify-center space-x-2 transition";
-            statusLabel.innerText = "完成";
+            btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-sm transition";
+            statusLabel.innerText = "执行完毕";
+            exportBtn.classList.remove("hidden"); // 显示导出按钮
+        }
+
+        function exportResults() {
+            if (exportData.length === 0) return alert("暂无数据可导出");
+            const textToCopy = "=== VPS 路由测绘报告 ===\n" + exportData.join("\n") + "\n======================";
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const btn = document.getElementById("exportBtn");
+                btn.innerText = "✅ 已复制到剪贴板";
+                setTimeout(() => btn.innerText = "📋 复制纯文本报告", 2000);
+            }).catch(err => {
+                alert("复制失败，请手动在控制台查看。");
+                console.log(textToCopy);
+            });
         }
     </script>
 </body>
