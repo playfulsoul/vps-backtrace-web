@@ -9,20 +9,18 @@
 <body class="bg-gray-50 min-h-screen text-gray-800 antialiased p-6">
 
     <div class="max-w-7xl mx-auto">
-        <!-- 表头 -->
         <header class="mb-8 border-b border-gray-200 pb-4 flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800 mb-1">VPS 跨境路由综合测绘平台</h1>
-                <p class="text-gray-500 text-sm">支持多节点并发排队 · 动态 Payload 模板 · 客观网络链路分析</p>
+                <p class="text-gray-500 text-sm">支持多节点并发排队 · 动态 Payload 模板 · 客观网络链路特征分析</p>
             </div>
-            <!-- 新增：一键导出结果按钮 -->
             <button id="exportBtn" onclick="exportResults()" class="hidden text-sm bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow transition">
                 📋 复制纯文本报告
             </button>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- 左侧控制面板与术语说明 -->
+            <!-- 左侧控制面板 -->
             <div class="lg:col-span-1 space-y-6">
                 <!-- API 输入 -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
@@ -42,7 +40,7 @@
                     <p class="text-[11px] text-gray-500">注：填入原始对象后点击转换，系统将自动匹配 <code class="text-blue-600 font-semibold">{{IP}}</code> 与 <code class="text-blue-600 font-semibold">{{LOC}}</code> 变量。</p>
                 </div>
 
-                <!-- 测试目标 (调整为多选复选框) -->
+                <!-- 测试目标 -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                     <div class="flex items-center justify-between mb-3">
                         <label class="block text-sm font-semibold text-gray-700">3. 测试目标大区 (支持多选)</label>
@@ -75,23 +73,18 @@
                 <!-- 客观术语说明模块 -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-4">
                     <h3 class="text-sm font-semibold text-gray-800 border-b border-gray-100 pb-2">
-                        线路术语说明参考
+                        链路术语参考说明
                     </h3>
                     <div class="space-y-4 text-xs max-h-64 overflow-y-auto text-gray-600 leading-relaxed pr-2">
                         <div>
-                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">路由机制</h4>
-                            <p><strong>直连路由：</strong> 海外节点至国内骨干网无第三方国家节点周转，物理延迟通常为该地域理论最低值。</p>
-                            <p class="mt-1"><strong>国际中转：</strong> 经由 NTT、Cogent、PCCW 等国际一级运营商网络进行跨国数据交换，会增加网络跳数与理论延迟。</p>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">国内路由机制</h4>
+                            <p><strong>优化网络：</strong> 电信 CN2 GIA (AS4809)、联通 CUII (AS9929)、移动 CMIN2 (AS58807)。具备独立跨境链路，拥堵率与丢包率较低，通常具备更稳定的跨国传输保障。</p>
+                            <p class="mt-1"><strong>公众骨干网：</strong> 电信 163 (AS4134)、联通 169 (AS4837)、移动 CMNET (AS9808)。承载基础民用数据，国际出口高峰时段（20:00-23:00）易受拥堵影响。</p>
                         </div>
                         <div>
-                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">优化/精品网络</h4>
-                            <p><strong>电信 CN2 GIA (AS4809)：</strong> 电信下一代承载网高级选项，具备独立跨境链路，拥堵率极低。</p>
-                            <p class="mt-1"><strong>联通 CUII (AS9929)：</strong> 联通工业界别网络，对等互联带宽充裕，常用于政企或高质量传输需求。</p>
-                            <p class="mt-1"><strong>移动 CMIN2 (AS58807)：</strong> 移动高阶路由网络，提供相较普通 CMNET 更优的晚高峰保障。</p>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">公众骨干网络</h4>
-                            <p><strong>电信 163 (AS4134) / 联通 169 (AS4837) / 移动 CMNET (AS9808)：</strong> 三大运营商基础公众骨干网。承载超 90% 的民用数据，国际出口在高峰时段（20:00-23:00）存在常规拥堵及丢包现象。</p>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">国际骨干承载网</h4>
+                            <p><strong>亚太区主导：</strong> NTT (日本)、PCCW (香港)、Singtel (新加坡)、Telstra (澳洲)。数据在亚太地区中转时常接入此类一级网络。</p>
+                            <p class="mt-1"><strong>欧美区主导：</strong> Level3 / Lumen (美国)、Cogent (美国)、GTT (美国)、HE (美国)、Arelion/Telia (欧洲)、RETN (欧洲)。主要负责欧美跨大西洋及欧亚大陆流量承载。</p>
                         </div>
                     </div>
                 </div>
@@ -101,7 +94,7 @@
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[500px]">
                     <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-                        <h2 class="text-base font-semibold text-gray-800">测试结果视图</h2>
+                        <h2 class="text-base font-semibold text-gray-800">测绘结果视图</h2>
                         <span id="statusLabel" class="text-xs px-2.5 py-1 rounded bg-gray-100 text-gray-500">等待执行</span>
                     </div>
                     
@@ -128,7 +121,6 @@
             "沈阳枢纽网 (东北枢纽)": { telecom: "219.148.204.10", unicom: "119.118.10.10", mobile: "211.137.32.225" }
         };
 
-        // 全局变量，用于存储结构化数据以供导出
         let exportData = [];
 
         function smartConvertPayload() {
@@ -152,7 +144,6 @@
             }
         }
 
-        // 提取最终延迟 (利用正则抓取追踪结果中最后的 ms 数值)
         function extractLatency(rawText) {
             const msRegex = /([0-9.]+)\s*ms/g;
             let match;
@@ -160,36 +151,60 @@
             while ((match = msRegex.exec(rawText)) !== null) {
                 lastLatency = parseFloat(match[1]);
             }
-            return lastLatency ? `${lastLatency.toFixed(1)}ms` : '未知';
+            return lastLatency ? `${lastLatency.toFixed(1)}ms` : '无响应';
         }
 
-        // 客观化的结果解析模块
         function analyzeRoute(rawText) {
             if (!rawText) return { route: "探测无响应", isDirect: false, transit: [] };
             
             let typeTag = "直连";
             let domesticTag = "未知线路";
             let transitGates = [];
+            const tText = rawText.toLowerCase();
 
-            if (rawText.includes("gin.ntt.net")) transitGates.push("NTT");
-            if (rawText.includes("cogentco.com")) transitGates.push("Cogent");
-            if (rawText.includes("retn.net")) transitGates.push("RETN");
-            if (rawText.includes("comcast")) transitGates.push("Comcast");
-            if (rawText.includes("gtt.net")) transitGates.push("GTT");
-            if (rawText.includes("tatacommunications")) transitGates.push("Tata");
-            if (rawText.includes("pccw")) transitGates.push("PCCW");
+            // 国际骨干网特征字典 (域名特征 + IP网段双重锁定)
+            if (tText.includes("ntt.net") || rawText.includes("129.250.")) transitGates.push("NTT");
+            if (tText.includes("cogentco") || rawText.includes("130.117.") || rawText.includes("154.54.")) transitGates.push("Cogent");
+            if (tText.includes("retn.net") || rawText.includes("87.245.")) transitGates.push("RETN");
+            if (tText.includes("comcast") || rawText.includes("68.86.")) transitGates.push("Comcast");
+            if (tText.includes("gtt.net") || tText.includes("ti.ws") || rawText.includes("141.136.")) transitGates.push("GTT");
+            if (tText.includes("tata") || rawText.includes("64.86.")) transitGates.push("Tata");
+            if (tText.includes("pccw") || rawText.includes("63.218.")) transitGates.push("PCCW");
+            if (tText.includes("telia.net") || tText.includes("arelion")) transitGates.push("Telia(Arelion)");
+            if (tText.includes("telstra") || rawText.includes("202.84.")) transitGates.push("Telstra");
+            if (tText.includes("singtel") || rawText.includes("203.208.")) transitGates.push("Singtel");
+            if (tText.includes("he.net") || rawText.includes("184.105.") || rawText.includes("72.52.")) transitGates.push("HE");
+            if (tText.includes("level3.net") || rawText.includes("4.69.") || rawText.includes("4.68.")) transitGates.push("Level3");
+            if (tText.includes("zayo") || tText.includes("above.net")) transitGates.push("Zayo");
+            if (tText.includes("seabone")) transitGates.push("Sparkle");
+            if (tText.includes("opentransit")) transitGates.push("Orange");
+            if (tText.includes("bics.com")) transitGates.push("BICS");
 
-            if (transitGates.length > 0) typeTag = `国际中转`;
+            let uniqueTransit = [...new Set(transitGates)];
+            if (uniqueTransit.length > 0) typeTag = `中转`;
 
-            if (rawText.includes("4809") || rawText.includes("CN2")) domesticTag = "电信 CN2 GIA (AS4809)";
-            else if (rawText.includes("9929") || rawText.includes("CUII")) domesticTag = "联通 CUII (AS9929)";
-            else if (rawText.includes("58807") || rawText.includes("CMIN2")) domesticTag = "移动 CMIN2 (AS58807)";
-            else if (rawText.includes("4837")) domesticTag = "联通 169 (AS4837)";
-            else if (rawText.includes("4134") || rawText.includes("202.97")) domesticTag = "电信 163 (AS4134)";
-            else if (rawText.includes("58453") || rawText.includes("CMI")) domesticTag = "移动 CMI (AS58453)";
-            else if (rawText.includes("9808")) domesticTag = "移动 CMNET (AS9808)";
+            // 国内落地网络字典 (ASN编码 + 核心骨干网IP段双重锁定)
+            if (rawText.includes("4809") || rawText.includes("CN2") || rawText.includes("59.43.")) {
+                domesticTag = "电信 CN2 GIA (AS4809)";
+            } else if (rawText.includes("9929") || rawText.includes("CUII") || rawText.includes("210.14.") || rawText.includes("218.105.") || rawText.includes("210.51.")) {
+                domesticTag = "联通 CUII (AS9929)";
+            } else if (rawText.includes("58807") || rawText.includes("CMIN2")) {
+                domesticTag = "移动 CMIN2 (AS58807)";
+            } else if (rawText.includes("4837") || rawText.includes("219.158.")) {
+                domesticTag = "联通 169 (AS4837)";
+            } else if (rawText.includes("4134") || rawText.includes("202.97.")) {
+                domesticTag = "电信 163 (AS4134)";
+            } else if (rawText.includes("58453") || rawText.includes("CMI") || rawText.includes("223.120.") || rawText.includes("223.121.")) {
+                domesticTag = "移动 CMI (AS58453)";
+            } else if (rawText.includes("9808") || rawText.includes("221.183.") || rawText.includes("211.136.")) {
+                domesticTag = "移动 CMNET (AS9808)";
+            } else if (rawText.includes("4538") || rawText.includes("cernet") || rawText.includes("101.4.")) {
+                domesticTag = "教育网 CERNET (AS4538)";
+            } else if (rawText.includes("5009") || rawText.includes("cstnet")) {
+                domesticTag = "科技网 CSTNET (AS5009)";
+            }
 
-            return { route: domesticTag, isDirect: typeTag === "直连", transit: transitGates };
+            return { route: domesticTag, isDirect: typeTag === "直连", transit: uniqueTransit };
         }
 
         function parseLocation(url) {
@@ -209,7 +224,6 @@
 
         const delay = ms => new Promise(res => setTimeout(res, ms));
 
-        // 渲染多选框
         const container = document.getElementById("cityContainer");
         Object.keys(ipDatabase).forEach((cityName, index) => {
             const div = document.createElement("div");
@@ -259,8 +273,6 @@
             if (!apiText || !templateText) return;
             
             const apis = apiText.split("\n").map(url => url.trim()).filter(url => url);
-            
-            // 获取所有勾选的城市选项
             const selectedNodes = Array.from(document.querySelectorAll('input[name="targetCity"]:checked')).map(cb => cb.value);
             if(selectedNodes.length === 0) return alert("请至少选择一个测试目标！");
 
@@ -276,7 +288,7 @@
             document.getElementById("progressBar").classList.remove("hidden");
             reportContainer.innerHTML = ""; 
             exportBtn.classList.add("hidden");
-            exportData = []; // 清空导出缓存
+            exportData = []; 
 
             const isps = [
                 { key: "telecom", name: "中国电信" },
@@ -357,7 +369,6 @@
                             const analysis = analyzeRoute(rawText);
                             const latency = extractLatency(rawText);
                             
-                            // 渲染标签 UI
                             const typeBadge = analysis.isDirect 
                                 ? `<span class="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded">直连</span>` 
                                 : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">中转: ${analysis.transit.join(',')}</span>`;
@@ -365,7 +376,6 @@
 
                             document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} <span class="text-gray-700 font-medium ml-1 mr-2">${analysis.route}</span> ${latencyBadge}`;
 
-                            // 清洗格式
                             let formattedLog = rawText;
                             try {
                                 let parsed = JSON.parse(rawText);
@@ -377,7 +387,6 @@
                             }
                             document.getElementById(`log_${uniqueId}`).querySelector('pre').innerText = formattedLog || "无详细文本。";
 
-                            // 推入导出数据池
                             exportData.push(`[${locationKey}] ${actualNodeName} ${isp.name} -> ${analysis.isDirect ? '直连' : '中转('+analysis.transit.join(',')+ ')'} | ${analysis.route} | 延迟: ${latency}`);
 
                         } catch (error) {
@@ -394,8 +403,8 @@
 
             btn.disabled = false;
             btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow-sm transition";
-            statusLabel.innerText = "执行完毕";
-            exportBtn.classList.remove("hidden"); // 显示导出按钮
+            statusLabel.innerText = "测绘完毕";
+            exportBtn.classList.remove("hidden"); 
         }
 
         function exportResults() {
@@ -403,7 +412,7 @@
             const textToCopy = "=== VPS 路由测绘报告 ===\n" + exportData.join("\n") + "\n======================";
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const btn = document.getElementById("exportBtn");
-                btn.innerText = "✅ 已复制到剪贴板";
+                btn.innerText = "已复制";
                 setTimeout(() => btn.innerText = "📋 复制纯文本报告", 2000);
             }).catch(err => {
                 alert("复制失败，请手动在控制台查看。");
