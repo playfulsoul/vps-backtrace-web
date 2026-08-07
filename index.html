@@ -252,6 +252,37 @@
             arrow.style.transform = target.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
         }
 
+        // 兼容性剪贴板复制工具函数 (支持 Fallback)
+        function copyTextToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text).catch(() => fallbackCopyTextToClipboard(text));
+            } else {
+                return fallbackCopyTextToClipboard(text);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    textArea.style.top = "0";
+                    textArea.style.left = "0";
+                    textArea.style.opacity = "0";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    if (successful) resolve();
+                    else reject(new Error('copy command failed'));
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+
         function copySingleLog(event, logId) {
             if (event) event.stopPropagation();
             const logContainer = document.getElementById(logId);
@@ -259,8 +290,9 @@
             const pre = logContainer.querySelector('pre');
             if (!pre) return;
             const textToCopy = pre.innerText;
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                const btn = event.currentTarget;
+            const btn = event.currentTarget;
+            
+            copyTextToClipboard(textToCopy).then(() => {
                 const originalText = btn.innerText;
                 btn.innerText = "✓ 已复制";
                 btn.classList.add("text-green-400");
@@ -269,7 +301,7 @@
                     btn.classList.remove("text-green-400");
                 }, 1500);
             }).catch(err => {
-                alert("复制失败，请手动复制。");
+                alert("复制失败，请手动选择复制。");
             });
         }
 
@@ -491,7 +523,7 @@
         function exportResults() {
             if (exportData.length === 0) return alert("暂无数据可导出");
             const textToCopy = "=== VPS 路由测绘报告 ===\n" + exportData.join("\n") + "\n======================";
-            navigator.clipboard.writeText(textToCopy).then(() => {
+            copyTextToClipboard(textToCopy).then(() => {
                 const btn = document.getElementById("exportBtn");
                 btn.innerText = "已复制";
                 setTimeout(() => btn.innerText = "📋 复制纯文本报告", 2000);
