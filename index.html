@@ -28,6 +28,24 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- 左侧控制面板与术语说明 -->
             <div class="lg:col-span-1 space-y-6">
+                <!-- 自动抓取小书签 -->
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-5 rounded-xl shadow-md border border-blue-600 text-white relative overflow-hidden group">
+                    <div class="relative z-10 flex flex-col items-start gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🚀</span>
+                            <h3 class="font-bold text-sm">一键抓取 Looking Glass</h3>
+                        </div>
+                        <p class="text-[11px] text-blue-100 leading-relaxed">
+                            免抓包免配置！将下方按钮<span class="font-bold text-white">拖拽至浏览器书签栏</span>。在任何 VPS 商家的 LG 测试页点击该书签，即可自动提取接口参数并跳转回本站。
+                        </p>
+                        <a id="bookmarkletBtn" href="#" class="inline-block bg-white text-blue-600 font-bold text-xs py-2 px-4 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition transform duration-200 cursor-move border-2 border-transparent hover:border-blue-200" title="拖拽我到书签栏！">
+                            + VPS 路由一键捕获
+                        </a>
+                    </div>
+                    <!-- 装饰背景图案 -->
+                    <div class="absolute -right-6 -top-6 w-24 h-24 bg-white opacity-10 rounded-full blur-xl group-hover:scale-150 transition duration-500"></div>
+                </div>
+
                 <!-- 0. 测绘模式选择 -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-3">
                     <label class="block text-sm font-semibold text-gray-700">测绘模式</label>
@@ -800,19 +818,41 @@
             exportBtn.classList.remove("hidden"); 
         }
 
-        // 导出功能
-        function exportResults() {
-            if (exportData.length === 0) return alert("暂无数据可导出");
-            const textToCopy = "=== VPS 路由测绘报告 ===\n" + exportData.join("\n") + "\n======================";
-            copyTextToClipboard(textToCopy).then(() => {
-                const btn = document.getElementById("exportBtn");
-                btn.innerText = "已复制";
-                setTimeout(() => btn.innerText = "📋 复制纯文本报告", 2000);
-            }).catch(err => {
-                alert("复制失败，请手动在控制台查看。");
-                console.log(textToCopy);
-            });
         }
+
+        // Bookmarklet 生成与 URL 参数回填逻辑
+        window.addEventListener('DOMContentLoaded', () => {
+            // 1. 生成书签脚本
+            const currentUrl = window.location.origin + window.location.pathname;
+            const rawBookmarklet = `javascript:(function(){if(window.__vps_lg_sniffer)return;window.__vps_lg_sniffer=true;var div=document.createElement('div');div.innerHTML='🚀 <b>VPS 路由捕获中...</b><br><span style="font-size:12px;opacity:0.9;">请在当前页面点击测速按钮 (Run/Test)</span><br><button id="__vps_cancel" style="margin-top:10px;padding:4px 10px;border-radius:4px;border:none;background:rgba(255,255,255,0.2);color:white;cursor:pointer;font-size:12px;transition:0.2s">取消捕获</button>';div.style.cssText='position:fixed;top:20px;right:20px;background:linear-gradient(135deg, #4F46E5, #3B82F6);color:white;padding:16px 20px;border-radius:12px;font-family:system-ui,-apple-system,sans-serif;z-index:2147483647;box-shadow:0 10px 25px -5px rgba(59,130,246,0.5);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);animation:vpsSlideIn 0.3s ease-out;';var style=document.createElement('style');style.innerHTML='@keyframes vpsSlideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}} #__vps_cancel:hover{background:rgba(255,255,255,0.3)!important}';document.head.appendChild(style);document.body.appendChild(div);document.getElementById('__vps_cancel').onclick=function(){document.body.removeChild(div);window.__vps_lg_sniffer=false;};var targetUrl='${currentUrl}';function sendToPlatform(api,payload){var url=targetUrl+(targetUrl.includes('?')?'&':'?')+'lg_api='+encodeURIComponent(api)+'&lg_payload='+encodeURIComponent(payload);window.open(url,'_blank');document.body.removeChild(div);window.__vps_lg_sniffer=false;}var origFetch=window.fetch;window.fetch=function(input,init){var url=typeof input==='string'?input:input.url;var opts=init||input||{};var method=(opts.method||'GET').toUpperCase();var urlObj=new URL(url,window.location.href);if(method==='POST'||urlObj.searchParams.has('host')||urlObj.searchParams.has('cmd')||urlObj.searchParams.has('target')){sendToPlatform(urlObj.href,opts.body||'');return new Promise(function(){});}return origFetch.apply(this,arguments);};var origOpen=XMLHttpRequest.prototype.open;var origSend=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.open=function(method,url){this._method=method;this._url=url;return origOpen.apply(this,arguments);};XMLHttpRequest.prototype.send=function(body){var method=(this._method||'GET').toUpperCase();var urlObj=new URL(this._url,window.location.href);if(method==='POST'||urlObj.searchParams.has('host')||urlObj.searchParams.has('cmd')||urlObj.searchParams.has('target')){sendToPlatform(urlObj.href,body||'');return;}return origSend.apply(this,arguments);};})();`;
+            document.getElementById('bookmarkletBtn').href = rawBookmarklet;
+
+            // 2. 解析 URL 参数并回填
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('lg_api') && params.has('lg_payload')) {
+                const lgApi = params.get('lg_api');
+                let lgPayload = params.get('lg_payload');
+                
+                document.getElementById('apiUrls').value = lgApi;
+                document.getElementById('payloadTemplate').value = lgPayload;
+
+                // 清除 URL 参数以免刷新重复触发
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // 自动触发智能转换，将具体 IP 替换为 {{IP}}
+                setTimeout(() => {
+                    smartConvertPayload();
+                    // 高亮提示自动填入
+                    document.getElementById('apiUrls').classList.add('ring-2', 'ring-green-400', 'bg-green-50');
+                    document.getElementById('payloadTemplate').classList.add('ring-2', 'ring-green-400', 'bg-green-50');
+                    setTimeout(() => {
+                        document.getElementById('apiUrls').classList.remove('ring-2', 'ring-green-400', 'bg-green-50');
+                        document.getElementById('payloadTemplate').classList.remove('ring-2', 'ring-green-400', 'bg-green-50');
+                    }, 3000);
+                }, 100);
+            }
+        });
+        
     </script>
 </body>
 </html>
