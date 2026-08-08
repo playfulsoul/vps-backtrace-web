@@ -25,6 +25,32 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- 左侧控制面板与术语说明 -->
             <div class="lg:col-span-1 space-y-6">
+                <!-- 0. 测绘模式选择 -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                    <label class="block text-sm font-semibold text-gray-700">测绘模式</label>
+                    <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-lg text-xs font-medium text-center">
+                        <button type="button" id="modeTracerouteBtn" onclick="switchMode('traceroute')" class="py-2 rounded-md bg-white text-blue-600 shadow-sm transition font-semibold">
+                            ⚡ 极速 Traceroute
+                        </button>
+                        <button type="button" id="modeMtrBtn" onclick="switchMode('mtr')" class="py-2 rounded-md text-gray-500 hover:text-gray-800 transition font-normal">
+                            📊 深度 MTR 测绘
+                        </button>
+                    </div>
+                    <div id="mtrOptions" class="hidden text-xs space-y-2 pt-2 border-t border-gray-100">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600 font-medium">MTR 发包次数 (-c):</span>
+                            <select id="mtrCount" onchange="onMtrCountChange()" class="border border-gray-200 rounded px-2 py-1 bg-gray-50 text-gray-700 text-xs">
+                                <option value="5" selected>5 次 (推荐 快速)</option>
+                                <option value="10">10 次 (精准 稳定)</option>
+                                <option value="20">20 次 (深度 压测)</option>
+                            </select>
+                        </div>
+                        <p class="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-100 leading-relaxed">
+                            💡 提示：若目标 Looking Glass 不支持 MTR 命令，系统将自动优雅降级为 Traceroute 模式。
+                        </p>
+                    </div>
+                </div>
+
                 <!-- API 输入 -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">1. 节点 Looking Glass API (每行一个)</label>
@@ -79,6 +105,11 @@
                         链路术语参考说明
                     </h3>
                     <div class="space-y-4 text-xs max-h-[360px] overflow-y-auto text-gray-600 leading-relaxed pr-2">
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-blue-500 pl-1.5">MTR 选机质量指标</h4>
+                            <p><strong>丢包率 (Loss%)：</strong> 晚高峰选机核心依据。🟢 0% (优秀) | 🟡 &lt;5% (良好) | 🔴 &gt;10% (严重拥堵，建议避坑)。</p>
+                            <p class="mt-1"><strong>延迟抖动 (StDev)：</strong> 标准差衡量线路稳定性，抖动越小（&lt;5ms）说明网络越平稳，对游戏与实时通讯越友好。</p>
+                        </div>
                         <div>
                             <h4 class="font-semibold text-gray-800 mb-1 border-l-2 border-gray-400 pl-1.5">地理走向分析</h4>
                             <p><strong>逻辑直连：</strong> BGP网络层直接交接，未经过第三方运营商网络，但物理光缆不一定是两点之间的最短直线路径。</p>
@@ -177,15 +208,16 @@
             const tText = rawText.toLowerCase();
 
             // ================= 地理特征嗅探 (预警绕路陷阱) =================
-            if (tText.match(/los[-_]?angeles|lax|san[-_]?jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo[-_]?alto|paix/i)) geoNodes.push("🇺🇸美洲");
-            if (tText.match(/frankfurt|fra|london|lhr|amsterdam|ams|paris|cdg/i)) geoNodes.push("🇪🇺欧洲");
-            if (tText.match(/tokyo|nrt|hnd|osaka|kix/i)) geoNodes.push("🇯🇵日本");
-            if (tText.match(/singapore|sin|sgp/i)) geoNodes.push("🇸🇬新加坡");
-            if (tText.match(/hong[-_]?kong|hkg/i)) geoNodes.push("🇭🇰香港");
-            if (tText.match(/seoul|sel|icn/i)) geoNodes.push("🇰🇷韩国");
-            if (tText.match(/moscow|mow|svo|vladivostok|vvo/i)) geoNodes.push("🇷🇺俄罗斯");
-            if (tText.match(/dubai|dxb|uae/i)) geoNodes.push("🇦🇪中东");
-            if (tText.match(/sydney|syd|melbourne|mel/i)) geoNodes.push("🇦🇺澳洲");
+            const normText = rawText.replace(/[-_./:]/g, ' ');
+            if (normText.match(/\b(los[-_]?angeles|lax|san[-_]?jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo[-_]?alto|paix|new[-_]?york|nyc|dallas|dfw|toronto|yyz|vancouver|yvr)\b/i)) geoNodes.push("🇺🇸美洲");
+            if (normText.match(/\b(frankfurt|fra|london|lhr|amsterdam|ams|paris|cdg|sofia|limburg|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|istanbul|ist)\b/i)) geoNodes.push("🇪🇺欧洲");
+            if (normText.match(/\b(tokyo|nrt|hnd|osaka|kix|japan)\b/i)) geoNodes.push("🇯🇵日本");
+            if (normText.match(/\b(singapore|sin|sgp)\b/i)) geoNodes.push("🇸🇬新加坡");
+            if (normText.match(/\b(hong[-_]?kong|hkg)\b/i)) geoNodes.push("🇭🇰香港");
+            if (normText.match(/\b(seoul|sel|icn|korea)\b/i)) geoNodes.push("🇰🇷韩国");
+            if (normText.match(/\b(moscow|mow|svo|vladivostok|vvo)\b/i)) geoNodes.push("🇷🇺俄罗斯");
+            if (normText.match(/\b(dubai|dxb|uae)\b/i)) geoNodes.push("🇦🇪中东");
+            if (normText.match(/\b(sydney|syd|melbourne|mel|auckland|australia)\b/i)) geoNodes.push("🇦🇺澳洲");
 
             let uniqueGeo = [...new Set(geoNodes)];
 
@@ -234,12 +266,146 @@
             return { route: domesticTag, isDirect: typeTag === "直连", transit: uniqueTransit, geoPath: uniqueGeo };
         }
 
+        // ================= MTR 测绘与降级引擎 =================
+        let currentMode = 'traceroute'; // 'traceroute' | 'mtr'
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const traceBtn = document.getElementById("modeTracerouteBtn");
+            const mtrBtn = document.getElementById("modeMtrBtn");
+            const mtrOptions = document.getElementById("mtrOptions");
+            const payloadEl = document.getElementById("payloadTemplate");
+
+            if (mode === 'traceroute') {
+                traceBtn.className = "py-2 rounded-md bg-white text-blue-600 shadow-sm transition font-semibold";
+                mtrBtn.className = "py-2 rounded-md text-gray-500 hover:text-gray-800 transition font-normal";
+                mtrOptions.classList.add("hidden");
+                payloadEl.value = payloadEl.value.replace(/"command"\s*:\s*"mtr"/g, '"command": "traceroute"');
+            } else {
+                mtrBtn.className = "py-2 rounded-md bg-white text-blue-600 shadow-sm transition font-semibold";
+                traceBtn.className = "py-2 rounded-md text-gray-500 hover:text-gray-800 transition font-normal";
+                mtrOptions.classList.remove("hidden");
+                const count = document.getElementById("mtrCount").value;
+                if (payloadEl.value.includes('"command": "traceroute"')) {
+                    payloadEl.value = payloadEl.value.replace(/"command"\s*:\s*"traceroute"/g, '"command": "mtr"');
+                    try {
+                        let parsed = JSON.parse(payloadEl.value);
+                        parsed.count = parseInt(count);
+                        payloadEl.value = JSON.stringify(parsed, null, 2);
+                    } catch(e) {}
+                }
+            }
+        }
+
+        function onMtrCountChange() {
+            if (currentMode !== 'mtr') return;
+            const payloadEl = document.getElementById("payloadTemplate");
+            const count = parseInt(document.getElementById("mtrCount").value);
+            try {
+                let parsed = JSON.parse(payloadEl.value);
+                if (parsed.command === 'mtr') {
+                    parsed.count = count;
+                    payloadEl.value = JSON.stringify(parsed, null, 2);
+                }
+            } catch(e) {}
+        }
+
+        // MTR 日志独立解析引擎 (包含降级识别与 Loss%/Avg/StDev 提取)
+        function parseMtrLog(rawText) {
+            if (!rawText) return { isFallback: true, ...analyzeRoute(rawText) };
+
+            const tText = rawText.toLowerCase();
+
+            // 1. 检查 API 是否不支持 MTR 命令，触发自动优雅降级
+            if (tText.includes("command not found") || tText.includes("unsupported") || tText.includes("invalid command") || tText.includes("unknown command") || tText.includes("not allowed")) {
+                let routeResult = analyzeRoute(rawText);
+                routeResult.isFallback = true;
+                routeResult.fallbackReason = "LG 不支持 MTR，已回退为 Traceroute";
+                return routeResult;
+            }
+
+            // 2. 复用骨干网与地理走向分析逻辑
+            const routeResult = analyzeRoute(rawText);
+
+            let lossRate = null;
+            let avgLatency = null;
+            let stdev = null;
+
+            const lines = rawText.split(/\r?\n/);
+            let validMtrRows = [];
+
+            for (let line of lines) {
+                let trimmed = line.trim();
+                if (!trimmed) continue;
+                
+                // 通用 MTR 表格格式正则:
+                // [Hop] [Host/IP] [Loss%] [Snt] [Last] [Avg] [Best] [Wrst] [StDev]
+                // 示例: " 1.|-- 10.0.0.1 0.0% 5 1.2 1.5 1.1 2.3 0.4"
+                const mtrRowRegex = /(?:\d+[\.\|-]+|\b\d+\b)\s+([^\s]+)?\s*([0-9.]+)%\s+(\d+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)(?:\s+([0-9.]+))?/;
+                const match = trimmed.match(mtrRowRegex);
+
+                if (match) {
+                    validMtrRows.push({
+                        host: match[1] || "",
+                        loss: parseFloat(match[2]),
+                        snt: parseInt(match[3]),
+                        last: parseFloat(match[4]),
+                        avg: parseFloat(match[5]),
+                        best: parseFloat(match[6]),
+                        wrst: parseFloat(match[7]),
+                        stdev: match[8] !== undefined ? parseFloat(match[8]) : null
+                    });
+                }
+            }
+
+            if (validMtrRows.length > 0) {
+                // 以末端目标节点作为质量判定指标
+                const targetHop = validMtrRows[validMtrRows.length - 1];
+                lossRate = targetHop.loss;
+                avgLatency = targetHop.avg;
+                stdev = targetHop.stdev;
+            } else {
+                // 如果未精准匹配 MTR 行，尝试全局正则寻找 Loss%
+                const lossMatch = rawText.match(/([0-9.]+)%/);
+                if (lossMatch) lossRate = parseFloat(lossMatch[1]);
+                const latencyStr = extractLatency(rawText);
+                if (latencyStr && latencyStr !== '无响应') {
+                    avgLatency = parseFloat(latencyStr);
+                }
+                
+                if (lossRate === null && avgLatency === null) {
+                    routeResult.isFallback = true;
+                    routeResult.fallbackReason = "未识别到 MTR 格式日志，已按 Traceroute 展示";
+                    return routeResult;
+                }
+            }
+
+            routeResult.isMtr = true;
+            routeResult.lossRate = lossRate !== null ? lossRate : 0;
+            routeResult.avgLatency = avgLatency !== null ? `${avgLatency.toFixed(1)}ms` : extractLatency(rawText);
+            routeResult.stdev = stdev !== null ? `${stdev.toFixed(1)}ms` : null;
+
+            return routeResult;
+        }
+
         function parseLocation(url) {
             try {
-                const hostname = new URL(url).hostname;
-                const match = hostname.match(/-(sg|singapore|la|los-angeles|london|de|germany|jp|tokyo)/i);
+                const match = url.match(/(?:^|[-_./])(sg|singapore|la|los-angeles|lax|sjc|san-jose|sea|seattle|iad|ashburn|ord|chicago|nyc|new-york|dallas|dfw|toronto|yyz|vancouver|de|germany|fra|frankfurt|limburg|london|lhr|uk|ams|amsterdam|cdg|paris|sofia|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|istanbul|ist|jp|tokyo|nrt|hnd|osaka|kix|hk|hong-kong|hkg|kr|seoul|icn|sel|syd|sydney|mel|melbourne|auckland|dubai|dxb)(?:$|[-_./])/i);
                 return match ? match[1].toUpperCase() : "DEFAULT";
             } catch (e) { return "DEFAULT"; }
+        }
+
+        function getServerHomeRegion(locationKey, url) {
+            const loc = (locationKey + " " + url).replace(/[-_./:]/g, ' ').toLowerCase();
+            if (loc.match(/\b(de|germany|frankfurt|fra|limburg|london|lhr|uk|amsterdam|ams|paris|cdg|sofia|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|istanbul|ist|europe|mow|moscow)\b/i)) return "🇪🇺欧洲";
+            if (loc.match(/\b(la|los-angeles|lax|san-jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo-alto|nyc|new-york|dallas|dfw|toronto|yyz|vancouver|us|america)\b/i)) return "🇺🇸美洲";
+            if (loc.match(/\b(sg|singapore|sin)\b/i)) return "🇸🇬新加坡";
+            if (loc.match(/\b(hk|hong-kong|hkg)\b/i)) return "🇭🇰香港";
+            if (loc.match(/\b(jp|tokyo|nrt|hnd|osaka|kix|japan)\b/i)) return "🇯🇵日本";
+            if (loc.match(/\b(kr|seoul|sel|icn|korea)\b/i)) return "🇰🇷韩国";
+            if (loc.match(/\b(au|sydney|syd|melbourne|mel|auckland|australia)\b/i)) return "🇦🇺澳洲";
+            if (loc.match(/\b(dxb|dubai|uae)\b/i)) return "🇦🇪中东";
+            return null;
         }
 
         function toggleAccordion(id, event) {
@@ -463,28 +629,56 @@
                             const response = await fetch(apiUrl, { method: "POST", headers: headers, body: bodyData });
                             const rawText = await response.text();
                             
-                            const analysis = analyzeRoute(rawText);
+                            let analysis;
+                            if (currentMode === 'mtr') {
+                                analysis = parseMtrLog(rawText);
+                            } else {
+                                analysis = analyzeRoute(rawText);
+                            }
+
                             const latency = extractLatency(rawText);
                             
                             // 生成标签 (追加 whitespace-nowrap 防止折行)
                             const typeBadge = analysis.isDirect 
                                 ? `<span class="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded whitespace-nowrap">直连</span>` 
                                 : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap">中转: ${analysis.transit.join(',')}</span>`;
-                            const latencyBadge = `<span class="text-gray-500 font-mono w-14 text-right inline-block whitespace-nowrap">${latency}</span>`;
 
                             // 地理节点绕路预警机制
                             let geoBadge = "";
                             let exportGeo = "";
-                            if (analysis.geoPath.length > 0) {
-                                // 若标榜直连且途经美、欧、澳、中东、俄等极远节点，即触发绕路警报
-                                const isDetour = (analysis.isDirect && (analysis.geoPath.includes("🇺🇸美洲") || analysis.geoPath.includes("🇪🇺欧洲") || analysis.geoPath.includes("🇦🇺澳洲") || analysis.geoPath.includes("🇷🇺俄罗斯") || analysis.geoPath.includes("🇦🇪中东")));
+                            if (analysis.geoPath && analysis.geoPath.length > 0) {
+                                const homeRegion = getServerHomeRegion(locationKey, apiUrl);
+                                // 过滤掉服务器所在家乡大区的正常出港节点，仅当途经非相关的第三者跨洲节点时才判定为绕路
+                                const detourNodes = analysis.geoPath.filter(geo => geo !== homeRegion);
+                                const isDetour = (analysis.isDirect && detourNodes.length > 0 && (detourNodes.includes("🇺🇸美洲") || detourNodes.includes("🇪🇺欧洲") || detourNodes.includes("🇦🇺澳洲") || detourNodes.includes("🇷🇺俄罗斯") || detourNodes.includes("🇦🇪中东")));
                                 const geoColor = isDetour ? "text-red-600 bg-red-50 border-red-200" : "text-gray-500 bg-gray-50 border-gray-200";
                                 const geoIcon = isDetour ? "⚠️ 物理绕路:" : "📍 途径:";
                                 geoBadge = `<span class="${geoColor} border px-1.5 py-0.5 rounded whitespace-nowrap text-[10px] ml-1">${geoIcon} ${analysis.geoPath.join('➔')}</span>`;
                                 exportGeo = isDetour ? ` [绕路: ${analysis.geoPath.join('➔')}]` : ` [途径: ${analysis.geoPath.join('➔')}]`;
                             }
 
-                            document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} ${geoBadge} <span class="text-gray-700 font-medium ml-1 mr-2 whitespace-nowrap">${analysis.route}</span> ${latencyBadge}`;
+                            // MTR 质量指标 Badge (丢包率高亮与延迟抖动)
+                            let mtrBadge = "";
+                            let exportMtr = "";
+                            if (currentMode === 'mtr' && analysis.isMtr && !analysis.isFallback) {
+                                let lossColor = "bg-green-50 text-green-700 border-green-200";
+                                if (analysis.lossRate > 0 && analysis.lossRate < 5) lossColor = "bg-yellow-50 text-yellow-700 border-yellow-200";
+                                else if (analysis.lossRate >= 5 && analysis.lossRate < 10) lossColor = "bg-amber-50 text-amber-700 border-amber-200";
+                                else if (analysis.lossRate >= 10) lossColor = "bg-red-50 text-red-700 border-red-200";
+
+                                const lossBadge = `<span class="${lossColor} border px-1.5 py-0.5 rounded whitespace-nowrap text-[10px] font-mono font-semibold ml-1">Loss ${analysis.lossRate}%</span>`;
+                                mtrBadge = lossBadge;
+                                exportMtr = ` | MTR 丢包: ${analysis.lossRate}%${analysis.stdev ? ' (抖动: ±' + analysis.stdev + ')' : ''}`;
+                            } else if (currentMode === 'mtr' && analysis.isFallback) {
+                                mtrBadge = `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap text-[10px] ml-1" title="${analysis.fallbackReason || '已降级'}">⚠️ 降级 Traceroute</span>`;
+                            }
+
+                            const latencyStr = (currentMode === 'mtr' && analysis.isMtr && !analysis.isFallback) 
+                                ? `${analysis.avgLatency}${analysis.stdev ? ' (±' + analysis.stdev + ')' : ''}` 
+                                : latency;
+                            const latencyBadge = `<span class="text-gray-500 font-mono text-right inline-block whitespace-nowrap text-xs ml-1">${latencyStr}</span>`;
+
+                            document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} ${geoBadge} ${mtrBadge} <span class="text-gray-700 font-medium ml-1 mr-1 whitespace-nowrap">${analysis.route}</span> ${latencyBadge}`;
 
                             // 清洗格式保证日志的竖排纯净度
                             let formattedLog = rawText;
@@ -498,8 +692,8 @@
                             }
                             document.getElementById(`log_${uniqueId}`).querySelector('pre').innerText = formattedLog || "无详细文本。";
 
-                            // 数据存入导出池 (携带地理嗅探结果)
-                            exportData.push(`[${locationKey}] ${actualNodeName} ${isp.name} -> ${analysis.isDirect ? '直连' : '中转('+analysis.transit.join(',')+ ')'}${exportGeo} | ${analysis.route} | 延迟: ${latency}`);
+                            // 数据存入导出池 (携带地理嗅探及 MTR 质量指标)
+                            exportData.push(`[${locationKey}] ${actualNodeName} ${isp.name} -> ${analysis.isDirect ? '直连' : '中转('+analysis.transit.join(',')+ ')'}${exportGeo} | ${analysis.route}${exportMtr} | 延迟: ${latencyStr}`);
 
                         } catch (error) {
                             document.getElementById(`status_${uniqueId}`).innerHTML = `<span class="text-red-500">探测失败</span>`;
