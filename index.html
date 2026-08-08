@@ -409,9 +409,14 @@
             }
 
             if (validMtrRows.length > 0) {
-                // 过滤掉尾部无响应的 ??? 节点 (100% 丢包且 0.0ms 的 ICMP 屏蔽节点)，精准选取最远有效响应节点作为选机判定依据
+                // 1. 过滤掉尾部无响应的 ??? 节点 (100% 丢包且 0.0ms 的 ICMP 屏蔽节点)
                 const respondingHops = validMtrRows.filter(r => !((r.host === "???" || r.loss === 100.0) && r.avg === 0.0));
-                const targetHop = (respondingHops.length > 0) ? respondingHops[respondingHops.length - 1] : validMtrRows[validMtrRows.length - 1];
+                // 2. 进一步过滤掉末端 Looking Glass 服务器内部/私有保留 IP 节点 (10.x / 172.16-31.x / 192.168.x)，精准选择最远有效公网目标节点
+                const publicRespondingHops = respondingHops.filter(r => !isPrivateIP(r.host));
+
+                const targetHop = (publicRespondingHops.length > 0) 
+                    ? publicRespondingHops[publicRespondingHops.length - 1] 
+                    : ((respondingHops.length > 0) ? respondingHops[respondingHops.length - 1] : validMtrRows[validMtrRows.length - 1]);
 
                 lossRate = targetHop.loss;
                 avgLatency = targetHop.avg;
@@ -438,6 +443,20 @@
             routeResult.stdev = stdev !== null ? `${stdev.toFixed(1)}ms` : null;
 
             return routeResult;
+        }
+
+        function isPrivateIP(host) {
+            if (!host) return false;
+            const match = host.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+            if (match) {
+                const o1 = parseInt(match[1], 10);
+                const o2 = parseInt(match[2], 10);
+                if (o1 === 10) return true;
+                if (o1 === 172 && o2 >= 16 && o2 <= 31) return true;
+                if (o1 === 192 && o2 === 168) return true;
+                if (o1 === 127) return true;
+            }
+            return false;
         }
 
         function parseLocation(url) {
