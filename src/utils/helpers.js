@@ -13,7 +13,7 @@ export function smartConvertPayload(rawText, currentMode, mtrCount = 5) {
             formatted = formatted.replace(new RegExp(`"${loc}"`, 'gi'), '"{{LOC}}"');
         });
 
-        const targetCmd = currentMode === 'mtr' ? 'mtr' : 'traceroute';
+        const targetCmd = currentMode === 'mtr' ? 'mtr' : (currentMode === 'ping' ? 'ping' : 'traceroute');
         formatted = formatted.replace(/"command"\s*:\s*"(?:ping|test|traceroute|mtr)"/gi, `"command": "${targetCmd}"`);
         formatted = formatted.replace(/"cmd"\s*:\s*"(?:ping|test|traceroute|mtr)"/gi, `"cmd": "${targetCmd}"`);
 
@@ -23,7 +23,7 @@ export function smartConvertPayload(rawText, currentMode, mtrCount = 5) {
         }
         return JSON.stringify(parsed, null, 2);
     } catch (e) {
-        const targetCmd = currentMode === 'mtr' ? 'mtr' : 'traceroute';
+        const targetCmd = currentMode === 'mtr' ? 'mtr' : (currentMode === 'ping' ? 'ping' : 'traceroute');
         return rawText.replace(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g, "{{IP}}")
                       .replace(/"location"\s*:\s*"[^"]+"/i, '"location": "{{LOC}}"')
                       .replace(/"command"\s*:\s*"[^"]+"/i, `"command": "${targetCmd}"`);
