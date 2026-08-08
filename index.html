@@ -207,11 +207,50 @@
             let geoNodes = [];
             const tText = rawText.toLowerCase();
 
-            // ================= 地理特征嗅探 (按 Hop 顺序精准追踪) =================
+            // ================= 细粒度城市/国家节点精准追踪 =================
             const logLines = rawText.split(/\r?\n/);
+            let rawCityNodes = [];
+
             for (let line of logLines) {
                 // 将分隔符转为空格，并剥离连接在主机名末尾的接口/路由器编号 (如 LosAngeles6 -> LosAngeles, fra15 -> fra, lax1 -> lax)
                 const normLine = line.replace(/[-_./:]/g, ' ').replace(/([a-zA-Z]+)\d+/g, '$1');
+                
+                // 细粒度城市/国家节点判定
+                if (normLine.match(/\b(london|lhr|lon)\b/i)) rawCityNodes.push("🇬🇧伦敦");
+                if (normLine.match(/\b(amsterdam|ams)\b/i)) rawCityNodes.push("🇳🇱阿姆斯特丹");
+                if (normLine.match(/\b(paris|cdg|prs)\b/i)) rawCityNodes.push("🇫🇷巴黎");
+                if (normLine.match(/\b(frankfurt|fra|ffm|limburg)\b/i)) rawCityNodes.push("🇩🇪法兰克福");
+                if (normLine.match(/\b(sofia|sof)\b/i)) rawCityNodes.push("🇧🇬索菲亚");
+                if (normLine.match(/\b(zurich|zrh)\b/i)) rawCityNodes.push("🇨🇭苏黎世");
+                if (normLine.match(/\b(stockholm|arn)\b/i)) rawCityNodes.push("🇸🇪斯德哥尔摩");
+                if (normLine.match(/\b(helsinki|hel)\b/i)) rawCityNodes.push("🇫🇮赫尔辛基");
+                if (normLine.match(/\b(warsaw|waw)\b/i)) rawCityNodes.push("🇵🇱华沙");
+                if (normLine.match(/\b(milan|mxp)\b/i)) rawCityNodes.push("🇮🇹米兰");
+                if (normLine.match(/\b(madrid|mad)\b/i)) rawCityNodes.push("🇪🇸马德里");
+                if (normLine.match(/\b(istanbul|ist)\b/i)) rawCityNodes.push("🇹🇷伊斯坦布尔");
+                if (normLine.match(/\b(moscow|mow|svo)\b/i)) rawCityNodes.push("🇷🇺莫斯科");
+
+                if (normLine.match(/\b(singapore|sin|sgp)\b/i)) rawCityNodes.push("🇸🇬新加坡");
+                if (normLine.match(/\b(hong[-_]?kong|hkg|hk)\b/i)) rawCityNodes.push("🇭🇰香港");
+                if (normLine.match(/\b(tokyo|nrt|hnd)\b/i)) rawCityNodes.push("🇯🇵东京");
+                if (normLine.match(/\b(osaka|kix)\b/i)) rawCityNodes.push("🇯🇵大阪");
+                if (normLine.match(/\b(seoul|sel|icn)\b/i)) rawCityNodes.push("🇰🇷首尔");
+
+                if (normLine.match(/\b(los[-_]?angeles|lax|la)\b/i)) rawCityNodes.push("🇺🇸洛杉矶");
+                if (normLine.match(/\b(san[-_]?jose|sjc)\b/i)) rawCityNodes.push("🇺🇸圣何塞");
+                if (normLine.match(/\b(seattle|sea)\b/i)) rawCityNodes.push("🇺🇸西雅图");
+                if (normLine.match(/\b(ashburn|iad)\b/i)) rawCityNodes.push("🇺🇸阿什本");
+                if (normLine.match(/\b(new[-_]?york|nyc)\b/i)) rawCityNodes.push("🇺🇸纽约");
+                if (normLine.match(/\b(chicago|ord)\b/i)) rawCityNodes.push("🇺🇸芝加哥");
+                if (normLine.match(/\b(dallas|dfw)\b/i)) rawCityNodes.push("🇺🇸达拉斯");
+                if (normLine.match(/\b(toronto|yyz)\b/i)) rawCityNodes.push("🇨🇦多伦多");
+                if (normLine.match(/\b(vancouver|yvr)\b/i)) rawCityNodes.push("🇨🇦温哥华");
+
+                if (normLine.match(/\b(sydney|syd)\b/i)) rawCityNodes.push("🇦🇺悉尼");
+                if (normLine.match(/\b(melbourne|mel)\b/i)) rawCityNodes.push("🇦🇺墨尔本");
+                if (normLine.match(/\b(dubai|dxb)\b/i)) rawCityNodes.push("🇦🇪迪拜");
+
+                // 粗粒度大洲归纳
                 if (normLine.match(/\b(los[-_]?angeles|lax|san[-_]?jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo[-_]?alto|paix|new[-_]?york|nyc|dallas|dfw|toronto|yyz|vancouver|yvr)\b/i)) geoNodes.push("🇺🇸美洲");
                 if (normLine.match(/\b(frankfurt|fra|london|lhr|amsterdam|ams|paris|cdg|sofia|limburg|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|istanbul|ist)\b/i)) geoNodes.push("🇪🇺欧洲");
                 if (normLine.match(/\b(tokyo|nrt|hnd|osaka|kix|japan)\b/i)) geoNodes.push("🇯🇵日本");
@@ -223,6 +262,13 @@
                 if (normLine.match(/\b(sydney|syd|melbourne|mel|auckland|australia)\b/i)) geoNodes.push("🇦🇺澳洲");
             }
 
+            // 保持物理跳转顺序，去重相邻重复节点
+            let cityPath = [];
+            for (let cNode of rawCityNodes) {
+                if (cityPath.length === 0 || cityPath[cityPath.length - 1] !== cNode) {
+                    cityPath.push(cNode);
+                }
+            }
             let uniqueGeo = [...new Set(geoNodes)];
 
             // ================= 国际骨干网特征嗅探 =================
@@ -267,7 +313,7 @@
                 domesticTag = "科技网 CSTNET (AS5009)";
             }
 
-            return { route: domesticTag, isDirect: typeTag === "直连", transit: uniqueTransit, geoPath: uniqueGeo };
+            return { route: domesticTag, isDirect: typeTag === "直连", transit: uniqueTransit, geoPath: uniqueGeo, cityPath: cityPath };
         }
 
         // ================= MTR 测绘与降级引擎 =================
@@ -647,18 +693,30 @@
                                 ? `<span class="bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded whitespace-nowrap">直连</span>` 
                                 : `<span class="bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded whitespace-nowrap">中转: ${analysis.transit.join(',')}</span>`;
 
-                            // 地理节点绕路预警机制
+                            // 地理节点与细粒度城市路径精准展现
                             let geoBadge = "";
                             let exportGeo = "";
-                            if (analysis.geoPath && analysis.geoPath.length > 0) {
+                            const displayPath = (analysis.cityPath && analysis.cityPath.length > 0) ? analysis.cityPath : analysis.geoPath;
+                            
+                            if (displayPath && displayPath.length > 0) {
                                 const homeRegion = getServerHomeRegion(locationKey, apiUrl);
-                                // 过滤掉服务器所在家乡大区的正常出港节点，仅当途经非相关的第三者跨洲节点时才判定为绕路
-                                const detourNodes = analysis.geoPath.filter(geo => geo !== homeRegion);
+                                const detourNodes = (analysis.geoPath || []).filter(geo => geo !== homeRegion);
                                 const isDetour = (analysis.isDirect && detourNodes.length > 0 && (detourNodes.includes("🇺🇸美洲") || detourNodes.includes("🇪🇺欧洲") || detourNodes.includes("🇦🇺澳洲") || detourNodes.includes("🇷🇺俄罗斯") || detourNodes.includes("🇦🇪中东")));
-                                const geoColor = isDetour ? "text-red-600 bg-red-50 border-red-200" : "text-gray-500 bg-gray-50 border-gray-200";
-                                const geoIcon = isDetour ? "⚠️ 物理绕路:" : "📍 途径:";
-                                geoBadge = `<span class="${geoColor} border px-1.5 py-0.5 rounded whitespace-nowrap text-[10px] ml-1">${geoIcon} ${analysis.geoPath.join('➔')}</span>`;
-                                exportGeo = isDetour ? ` [绕路: ${analysis.geoPath.join('➔')}]` : ` [途径: ${analysis.geoPath.join('➔')}]`;
+                                
+                                let geoColor, geoIcon;
+                                if (isDetour) {
+                                    geoColor = "text-red-600 bg-red-50 border-red-200";
+                                    geoIcon = "⚠️ 跨洲物理绕路:";
+                                } else if (displayPath.length > 1) {
+                                    geoColor = "text-blue-700 bg-blue-50 border-blue-200";
+                                    geoIcon = "📍 洲内多市中转:";
+                                } else {
+                                    geoColor = "text-gray-500 bg-gray-50 border-gray-200";
+                                    geoIcon = "📍 途径:";
+                                }
+
+                                geoBadge = `<span class="${geoColor} border px-1.5 py-0.5 rounded whitespace-nowrap text-[10px] ml-1">${geoIcon} ${displayPath.join('➔')}</span>`;
+                                exportGeo = isDetour ? ` [跨洲绕路: ${displayPath.join('➔')}]` : ` [路径: ${displayPath.join('➔')}]`;
                             }
 
                             // MTR 质量指标 Badge (丢包率高亮与延迟抖动)
