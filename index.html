@@ -700,14 +700,21 @@
                             const response = await fetch(apiUrl, { method: "POST", headers: headers, body: bodyData });
                             const rawText = await response.text();
                             
+                            // 先清洗并解析 JSON 格式（还原真实的换行符），防止单行 JSON 字符串导致 MTR 逐行提取正则只匹配到第一跳
+                            let formattedLog = rawText;
+                            try {
+                                let parsed = JSON.parse(rawText);
+                                formattedLog = Array.isArray(parsed) ? parsed.join('\n') : (parsed.output || parsed.result || JSON.stringify(parsed, null, 2));
+                            } catch (e) {}
+                            
                             let analysis;
                             if (currentMode === 'mtr') {
-                                analysis = parseMtrLog(rawText);
+                                analysis = parseMtrLog(formattedLog);
                             } else {
-                                analysis = analyzeRoute(rawText);
+                                analysis = analyzeRoute(formattedLog);
                             }
 
-                            const latency = extractLatency(rawText);
+                            const latency = extractLatency(formattedLog);
                             
                             // 生成标签 (追加 whitespace-nowrap 防止折行)
                             const typeBadge = analysis.isDirect 
