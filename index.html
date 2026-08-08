@@ -15,7 +15,7 @@
             <div>
                 <h1 class="text-2xl font-bold text-gray-800 mb-1 flex items-center gap-2">
                     VPS 跨境路由综合测绘平台 
-                    <span class="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">v1.2</span>
+                    <span class="text-xs font-mono font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">v1.2.005</span>
                 </h1>
                 <p class="text-gray-500 text-sm">支持多节点并发排队 · 动态 Payload 模板 · 客观地理绕路特征嗅探</p>
             </div>
@@ -185,7 +185,7 @@
 
         let exportData = [];
 
-        // Payload 智能格式修复
+        // Payload 智能格式修复 (自动将 ping/test 替换为 traceroute/mtr，并将 location 替换为 {{LOC}})
         function smartConvertPayload() {
             const el = document.getElementById("payloadTemplate");
             let rawText = el.value.trim();
@@ -196,14 +196,32 @@
                 const ipRegex = /\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g;
                 formatted = formatted.replace(ipRegex, "{{IP}}");
 
-                const commonLocs = ["singapore", "london", "los-angeles", "germany", "frankfurt", "sofia", "istanbul"];
+                // 自动将 location / loc 字段值替换为 {{LOC}} 变量
+                formatted = formatted.replace(/"location"\s*:\s*"[^"]+"/i, '"location": "{{LOC}}"');
+                formatted = formatted.replace(/"loc"\s*:\s*"[^"]+"/i, '"loc": "{{LOC}}"');
+
+                // 自动匹配通用 location 字符串
+                const commonLocs = ["singapore", "london", "los-angeles", "germany", "frankfurt", "sofia", "istanbul", "bursa", "limburg", "new-york"];
                 commonLocs.forEach(loc => {
                     formatted = formatted.replace(new RegExp(`"${loc}"`, 'gi'), '"{{LOC}}"');
                 });
 
-                el.value = JSON.stringify(JSON.parse(formatted), null, 2);
+                // 自动将 command 中的 ping/test 自动替换为当前模式 (traceroute / mtr)
+                const targetCmd = (typeof currentMode !== 'undefined' && currentMode === 'mtr') ? 'mtr' : 'traceroute';
+                formatted = formatted.replace(/"command"\s*:\s*"(?:ping|test|traceroute|mtr)"/gi, `"command": "${targetCmd}"`);
+                formatted = formatted.replace(/"cmd"\s*:\s*"(?:ping|test|traceroute|mtr)"/gi, `"cmd": "${targetCmd}"`);
+
+                let parsed = JSON.parse(formatted);
+                if (typeof currentMode !== 'undefined' && currentMode === 'mtr') {
+                    const countEl = document.getElementById("mtrCount");
+                    parsed.count = parseInt(countEl ? countEl.value : 5);
+                }
+                el.value = JSON.stringify(parsed, null, 2);
             } catch (e) {
-                el.value = rawText.replace(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g, "{{IP}}").replace(/"(singapore|london|los-angeles|germany)"/gi, '"{{LOC}}"');
+                const targetCmd = (typeof currentMode !== 'undefined' && currentMode === 'mtr') ? 'mtr' : 'traceroute';
+                el.value = rawText.replace(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/g, "{{IP}}")
+                                 .replace(/"location"\s*:\s*"[^"]+"/i, '"location": "{{LOC}}"')
+                                 .replace(/"command"\s*:\s*"[^"]+"/i, `"command": "${targetCmd}"`);
             }
         }
 
@@ -351,20 +369,20 @@
                 traceBtn.className = "py-2 rounded-md bg-white text-blue-600 shadow-sm transition font-semibold";
                 mtrBtn.className = "py-2 rounded-md text-gray-500 hover:text-gray-800 transition font-normal";
                 mtrOptions.classList.add("hidden");
-                payloadEl.value = payloadEl.value.replace(/"command"\s*:\s*"mtr"/g, '"command": "traceroute"');
+                payloadEl.value = payloadEl.value.replace(/"command"\s*:\s*"(?:ping|mtr|traceroute|test)"/gi, '"command": "traceroute"');
+                payloadEl.value = payloadEl.value.replace(/"cmd"\s*:\s*"(?:ping|mtr|traceroute|test)"/gi, '"cmd": "traceroute"');
             } else {
                 mtrBtn.className = "py-2 rounded-md bg-white text-blue-600 shadow-sm transition font-semibold";
                 traceBtn.className = "py-2 rounded-md text-gray-500 hover:text-gray-800 transition font-normal";
                 mtrOptions.classList.remove("hidden");
                 const count = document.getElementById("mtrCount").value;
-                if (payloadEl.value.includes('"command": "traceroute"')) {
-                    payloadEl.value = payloadEl.value.replace(/"command"\s*:\s*"traceroute"/g, '"command": "mtr"');
-                    try {
-                        let parsed = JSON.parse(payloadEl.value);
-                        parsed.count = parseInt(count);
-                        payloadEl.value = JSON.stringify(parsed, null, 2);
-                    } catch(e) {}
-                }
+                payloadEl.value = payloadEl.value.replace(/"command"\s*:\s*"(?:ping|mtr|traceroute|test)"/gi, '"command": "mtr"');
+                payloadEl.value = payloadEl.value.replace(/"cmd"\s*:\s*"(?:ping|mtr|traceroute|test)"/gi, '"cmd": "mtr"');
+                try {
+                    let parsed = JSON.parse(payloadEl.value);
+                    parsed.count = parseInt(count);
+                    payloadEl.value = JSON.stringify(parsed, null, 2);
+                } catch(e) {}
             }
         }
 
@@ -480,23 +498,66 @@
             return false;
         }
 
+        // 节点位置智能解析 (包含 ISO 国家代码、常用城市及智能子域名提取 Fallback)
         function parseLocation(url) {
+            if (!url) return "DEFAULT";
             try {
-                const match = url.match(/(?:^|[-_./])(sg|singapore|la|los-angeles|lax|sjc|san-jose|sea|seattle|iad|ashburn|ord|chicago|nyc|new-york|dallas|dfw|toronto|yyz|vancouver|de|germany|fra|frankfurt|limburg|london|lhr|uk|ams|amsterdam|cdg|paris|sofia|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|istanbul|ist|jp|tokyo|nrt|hnd|osaka|kix|hk|hong-kong|hkg|kr|seoul|icn|sel|syd|sydney|mel|melbourne|auckland|dubai|dxb)(?:$|[-_./])/i);
-                return match ? match[1].toUpperCase() : "DEFAULT";
-            } catch (e) { return "DEFAULT"; }
+                const u = url.toLowerCase();
+                
+                const locMap = [
+                    { regex: /\b(tr|turkey|bursa|istanbul|ist)\b/i, label: "🇹🇷 土耳其" },
+                    { regex: /\b(de|germany|frankfurt|fra|limburg)\b/i, label: "🇩🇪 德国" },
+                    { regex: /\b(uk|gb|london|lhr|england)\b/i, label: "🇬🇧 英国" },
+                    { regex: /\b(us|america|los-angeles|la|lax|san-jose|sjc|seattle|sea|ashburn|iad|chicago|ord|nyc|new-york|dallas|dfw)\b/i, label: "🇺🇸 美国" },
+                    { regex: /\b(ca|canada|toronto|yyz|vancouver|yvr)\b/i, label: "🇨🇦 加拿大" },
+                    { regex: /\b(sg|singapore|sin)\b/i, label: "🇸🇬 新加坡" },
+                    { regex: /\b(hk|hong-kong|hkg)\b/i, label: "🇭🇰 香港" },
+                    { regex: /\b(jp|japan|tokyo|nrt|hnd|osaka|kix)\b/i, label: "🇯🇵 日本" },
+                    { regex: /\b(kr|korea|seoul|icn|sel)\b/i, label: "🇰🇷 韩国" },
+                    { regex: /\b(nl|netherlands|amsterdam|ams)\b/i, label: "🇳🇱 荷兰" },
+                    { regex: /\b(fr|france|paris|cdg)\b/i, label: "🇫🇷 法国" },
+                    { regex: /\b(bg|bulgaria|sofia|sof)\b/i, label: "🇧🇬 保加利亚" },
+                    { regex: /\b(ie|ireland|dublin)\b/i, label: "🇮🇪 爱尔兰" },
+                    { regex: /\b(fi|finland|helsinki|hel)\b/i, label: "🇫🇮 芬兰" },
+                    { regex: /\b(se|sweden|stockholm|arn)\b/i, label: "🇸🇪 瑞典" },
+                    { regex: /\b(pl|poland|warsaw|waw)\b/i, label: "🇵🇱 波兰" },
+                    { regex: /\b(it|italy|milan|mxp)\b/i, label: "🇮🇹 意大利" },
+                    { regex: /\b(es|spain|madrid|mad)\b/i, label: "🇪🇸 西班牙" },
+                    { regex: /\b(ch|switzerland|zurich|zrh)\b/i, label: "🇨🇭 瑞士" },
+                    { regex: /\b(ru|russia|moscow|mow)\b/i, label: "🇷🇺 俄罗斯" },
+                    { regex: /\b(au|australia|sydney|syd|melbourne|mel)\b/i, label: "🇦🇺 澳大利亚" },
+                    { regex: /\b(ae|uae|dubai|dxb)\b/i, label: "🇦🇪 迪拜" }
+                ];
+
+                for (let item of locMap) {
+                    if (item.regex.test(u)) {
+                        return item.label;
+                    }
+                }
+
+                // 智能提取子域名 Fallback (例: lg-tr-bursa.rabisu.com -> TR-BURSA)
+                const hostMatch = u.match(/https?:\/\/([a-z0-9-]+)\./i);
+                if (hostMatch && hostMatch[1]) {
+                    let sub = hostMatch[1].replace(/^lg-?/i, '').toUpperCase();
+                    if (sub.length >= 2) return sub;
+                }
+
+                return "UNKNOWN";
+            } catch (e) {
+                return "DEFAULT";
+            }
         }
 
         function getServerHomeRegion(locationKey, url) {
             const loc = (locationKey + " " + url).replace(/[-_./:]/g, ' ').toLowerCase();
-            if (loc.match(/\b(de|germany|frankfurt|fra|limburg|london|lhr|uk|amsterdam|ams|paris|cdg|sofia|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|istanbul|ist|europe|mow|moscow)\b/i)) return "🇪🇺欧洲";
-            if (loc.match(/\b(la|los-angeles|lax|san-jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo-alto|nyc|new-york|dallas|dfw|toronto|yyz|vancouver|us|america)\b/i)) return "🇺🇸美洲";
+            if (loc.match(/\b(tr|turkey|bursa|istanbul|ist|de|germany|frankfurt|fra|limburg|london|lhr|uk|gb|amsterdam|ams|paris|cdg|sofia|sof|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|europe|mow|moscow|ie|ireland|dublin|nl|fr|bg|fi|se|pl|it|es)\b/i)) return "🇪🇺欧洲";
+            if (loc.match(/\b(la|los-angeles|lax|san-jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo-alto|nyc|new-york|dallas|dfw|toronto|yyz|vancouver|us|america|ca|canada)\b/i)) return "🇺🇸美洲";
             if (loc.match(/\b(sg|singapore|sin)\b/i)) return "🇸🇬新加坡";
             if (loc.match(/\b(hk|hong-kong|hkg)\b/i)) return "🇭🇰香港";
             if (loc.match(/\b(jp|tokyo|nrt|hnd|osaka|kix|japan)\b/i)) return "🇯🇵日本";
             if (loc.match(/\b(kr|seoul|sel|icn|korea)\b/i)) return "🇰🇷韩国";
             if (loc.match(/\b(au|sydney|syd|melbourne|mel|auckland|australia)\b/i)) return "🇦🇺澳洲";
-            if (loc.match(/\b(dxb|dubai|uae)\b/i)) return "🇦🇪中东";
+            if (loc.match(/\b(dxb|dubai|uae|ae)\b/i)) return "🇦🇪中东";
             return null;
         }
 
@@ -771,7 +832,6 @@
                                 geoBadge = `<span class="${geoColor} border px-1.5 py-0.5 rounded whitespace-nowrap text-[10px] ml-1">${geoIcon} ${displayPath.join('➔')}</span>`;
                                 exportGeo = isDetour ? ` [跨洲绕路: ${displayPath.join('➔')}]` : ` [路径: ${displayPath.join('➔')}]`;
                             }
-
                             // MTR 质量指标 Badge (丢包率高亮与延迟抖动)
                             let mtrBadge = "";
                             let exportMtr = "";
@@ -818,13 +878,11 @@
             exportBtn.classList.remove("hidden"); 
         }
 
-        }
-
         // Bookmarklet 生成与 URL 参数回填逻辑
         window.addEventListener('DOMContentLoaded', () => {
             // 1. 生成书签脚本
             const currentUrl = window.location.origin + window.location.pathname;
-            const rawBookmarklet = `javascript:(function(){if(window.__vps_lg_sniffer)return;window.__vps_lg_sniffer=true;var div=document.createElement('div');div.innerHTML='🚀 <b>VPS 路由捕获中...</b><br><span style="font-size:12px;opacity:0.9;">请在当前页面点击测速按钮 (Run/Test)</span><br><button id="__vps_cancel" style="margin-top:10px;padding:4px 10px;border-radius:4px;border:none;background:rgba(255,255,255,0.2);color:white;cursor:pointer;font-size:12px;transition:0.2s">取消捕获</button>';div.style.cssText='position:fixed;top:20px;right:20px;background:linear-gradient(135deg, #4F46E5, #3B82F6);color:white;padding:16px 20px;border-radius:12px;font-family:system-ui,-apple-system,sans-serif;z-index:2147483647;box-shadow:0 10px 25px -5px rgba(59,130,246,0.5);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(10px);animation:vpsSlideIn 0.3s ease-out;';var style=document.createElement('style');style.innerHTML='@keyframes vpsSlideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}} #__vps_cancel:hover{background:rgba(255,255,255,0.3)!important}';document.head.appendChild(style);document.body.appendChild(div);document.getElementById('__vps_cancel').onclick=function(){document.body.removeChild(div);window.__vps_lg_sniffer=false;};var targetUrl='${currentUrl}';function sendToPlatform(api,payload){var url=targetUrl+(targetUrl.includes('?')?'&':'?')+'lg_api='+encodeURIComponent(api)+'&lg_payload='+encodeURIComponent(payload);window.open(url,'_blank');document.body.removeChild(div);window.__vps_lg_sniffer=false;}var origFetch=window.fetch;window.fetch=function(input,init){var url=typeof input==='string'?input:input.url;var opts=init||input||{};var method=(opts.method||'GET').toUpperCase();var urlObj=new URL(url,window.location.href);if(method==='POST'||urlObj.searchParams.has('host')||urlObj.searchParams.has('cmd')||urlObj.searchParams.has('target')){sendToPlatform(urlObj.href,opts.body||'');return new Promise(function(){});}return origFetch.apply(this,arguments);};var origOpen=XMLHttpRequest.prototype.open;var origSend=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.open=function(method,url){this._method=method;this._url=url;return origOpen.apply(this,arguments);};XMLHttpRequest.prototype.send=function(body){var method=(this._method||'GET').toUpperCase();var urlObj=new URL(this._url,window.location.href);if(method==='POST'||urlObj.searchParams.has('host')||urlObj.searchParams.has('cmd')||urlObj.searchParams.has('target')){sendToPlatform(urlObj.href,body||'');return;}return origSend.apply(this,arguments);};})();`;
+            const rawBookmarklet = `javascript:(function(){if(window.__vps_lg_sniffer)return;window.__vps_lg_sniffer=true;window.__vps_apis=window.__vps_apis||[];window.__vps_payload=window.__vps_payload||'';var div=document.createElement('div');div.id='__vps_panel';div.style.cssText='position:fixed;top:20px;right:20px;width:320px;background:linear-gradient(135deg, #1e293b, #0f172a);color:#f8fafc;padding:14px;border-radius:12px;font-family:system-ui,-apple-system,sans-serif;z-index:2147483647;box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);font-size:12px;';function renderPanel(){var count=window.__vps_apis.length;var listHtml=window.__vps_apis.map(function(item,idx){return '<div style="background:rgba(255,255,255,0.05);padding:3px 6px;margin-top:3px;border-radius:4px;word-break:break-all;font-family:monospace;font-size:10px;color:#cbd5e1;">📍 ['+(idx+1)+'] '+item+'</div>';}).join('');div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-weight:bold;color:#38bdf8;font-size:13px;">🚀 VPS 路由捕获助手 <span style="font-size:9px;opacity:0.7;">v1.2.003</span></span><button id="__vps_close" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;">✕</button></div><div style="color:#94a3b8;margin-bottom:6px;font-size:11px;">已捕获 <b style="color:#34d399;">'+count+'</b> 个节点 API</div><div id="__vps_list" style="max-height:100px;overflow-y:auto;margin-bottom:8px;">'+listHtml+'</div><div style="display:grid;grid-template-cols:1fr 1fr;gap:6px;"><button id="__vps_scan" style="background:#3b82f6;color:white;border:none;padding:6px;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;">⚡ 自动扫描全站</button><button id="__vps_send" style="background:'+(count>0?'#10b981':'#475569')+';color:white;border:none;padding:6px;border-radius:6px;cursor:'+(count>0?'pointer':'not-allowed')+';font-weight:600;font-size:11px;" '+(count===0?'disabled':'')+'>🚀 带回 ('+count+')</button></div>';document.getElementById('__vps_close').onclick=function(){document.body.removeChild(div);window.__vps_lg_sniffer=false;};document.getElementById('__vps_scan').onclick=function(){scanDomNodes();};document.getElementById('__vps_send').onclick=function(){if(window.__vps_apis.length>0)sendBatchToPlatform();};}document.body.appendChild(div);renderPanel();var targetUrl='${currentUrl}';function addApi(api,payload){if(!api)return;if(window.__vps_apis.indexOf(api)===-1){window.__vps_apis.push(api);}if(payload&&!window.__vps_payload){window.__vps_payload=payload;}renderPanel();}function sendBatchToPlatform(){var apisStr=window.__vps_apis.join('\\n');var url=targetUrl+(targetUrl.includes('?')?'&':'?')+'lg_api='+encodeURIComponent(apisStr)+'&lg_payload='+encodeURIComponent(window.__vps_payload||'');window.open(url,'_blank');}function scanDomNodes(){var html=document.body.innerHTML;var apiRegex=/https?:\\/\\/[a-zA-Z0-9.-]+\\/(?:lg-api|api)\\.php[^\\s"']*/gi;var m;while((m=apiRegex.exec(html))!==null){addApi(m[0],window.__vps_payload);}if(window.__vps_apis.length>0){var refUrl=window.__vps_apis[0];try{var refObj=new URL(refUrl);var host=refObj.hostname;document.querySelectorAll('option, button, a').forEach(function(opt){var optVal=opt.value||opt.textContent||'';optVal=optVal.toLowerCase().replace(/[^a-z0-9]/g,'');if(optVal.length<3||optVal.length>15)return;var parts=host.split('.');if(parts.length>=3){var sub=parts[0];var subPrefix=sub.split('-')[0]||'lg';var newSub=subPrefix+'-'+optVal;parts[0]=newSub;var newHost=parts.join('.');var newApi=refUrl.replace(host,newHost);addApi(newApi,window.__vps_payload);}});}catch(e){}}alert('扫描完成！共提取/推导到 '+window.__vps_apis.length+' 个节点 API。');}function isLgReq(url,method,body){var u=url.toLowerCase();var s=(url+'|'+(body?String(body):'')).toLowerCase();if(/\\.(img|png|jpg|jpeg|gif|css|js|ico|svg|woff2?|zip|bin|tar|gz|mp4|test)(\\?.*)?$/i.test(u))return false;if(/(test-files|speedtest|download|analytics|track|collect|beacon|sentry|pixel|ping\\.img)/i.test(s))return false;if(/(cmd|command|host|target|ip=|query|traceroute|mtr|lg-api|api\\.php)/i.test(s)){if(method==='POST'||/(cmd|command|host|target|ip=|query|traceroute|mtr)/i.test(u))return true;}return false;}var origFetch=window.fetch;window.fetch=function(input,init){var url=typeof input==='string'?input:input.url;var opts=init||input||{};var method=(opts.method||'GET').toUpperCase();var urlObj=new URL(url,window.location.href);if(isLgReq(urlObj.href,method,opts.body)){addApi(urlObj.href,opts.body||'');}return origFetch.apply(this,arguments);};var origOpen=XMLHttpRequest.prototype.open;var origSend=XMLHttpRequest.prototype.send;XMLHttpRequest.prototype.open=function(method,url){this._method=method;this._url=url;return origOpen.apply(this,arguments);};XMLHttpRequest.prototype.send=function(body){var method=(this._method||'GET').toUpperCase();var urlObj=new URL(this._url,window.location.href);if(isLgReq(urlObj.href,method,body)){addApi(urlObj.href,body||'');}return origSend.apply(this,arguments);};})();`;
             document.getElementById('bookmarkletBtn').href = rawBookmarklet;
 
             // 2. 解析 URL 参数并回填

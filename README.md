@@ -51,3 +51,12 @@
 ```javascript
 // 扩充示例：
 if (tText.match(/moscow|mow|vvo/i)) geoNodes.push("🇷🇺俄罗斯");
+```
+
+## 🔄 版本更新日志 (Changelog)
+
+### v1.2.001 (最新)
+- **MTR 深度测绘功能**: 新增了 MTR 测试模式，UI 上增加了 Traceroute / MTR 切换按钮，丰富了测绘维度。
+- **智能捕获书签 (Bookmarklet) 优化**: 修复了在现代商业网站 (如 rabisu.com) 页面会误拦截并捕获无关的遥测/埋点 POST 请求的问题。现在的捕获更加精准。
+- **UI & 交互修复**: 修复了前端页面中 MTR 无法点击、测试目标大区不显示以及 Payload 模板没有默认数据回填的 Bug，整体体验更加丝滑。
+
