@@ -1,0 +1,31 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # 当你往 main 分支推送代码时自动触发
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 编译打包静态网页
+        run: npm run build
+
+      - name: 部署到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist # 将打包出来的 dist 目录发布到 gh-pages 分支

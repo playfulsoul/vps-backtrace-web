@@ -1,62 +1,64 @@
-# 🚀 VPS 跨境路由综合测绘平台 (VPS Route Trace Radar)
+# VPS 跨境路由综合测绘平台 🚀
 
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-323330?style=for-the-badge&logo=javascript&logoColor=F7DF1E)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Pure Frontend](https://img.shields.io/badge/100%25_Pure_Frontend-Success?style=for-the-badge)
+一个极其轻量、现代化的纯前端测绘应用，专注于帮助 VPS 玩家一键自动化评估商家到中国大陆地区三网（电信、联通、移动）的核心路由质量，包括 **MTR 深度路径分析** 与 **极速 Ping 测绘**。
 
-这是一个专为 VPS 深度评测与网络极客打造的**纯前端多节点回程路由分析工具**。通过逆向解析各大机房 Looking Glass API，实现一键测绘全球节点至国内三网（电信、联通、移动）的真实物理链路与 BGP 走向。
-
-👉 **在线体验 (Live Demo) : [https://playfulsoul.github.io/vps-backtrace-web/](https://playfulsoul.github.io/vps-backtrace-web/)**
+> 🌐 **在线体验 / 部署地址**： [https://playfulsoul.github.io/vps-backtrace-web/](https://playfulsoul.github.io/vps-backtrace-web/)
 
 ---
 
-## ✨ 核心硬核特性
+## ✨ 核心特性
 
-*   **🛠️ 万能 Payload 转化引擎**
-    彻底告别硬编码！支持将 F12 抓包获取的任意机房乱码对象，一键净化、补全双引号，并自动注入 `{{IP}}` 与 `{{LOC}}` 变量。完美兼容 JSON 与 Form Data 双模接口。
-*   **📍 物理绕路地理雷达**
-    内置全球核心骨干网 IATA 机场代码嗅探器。精准剥离“逻辑直连”的营销伪装，若亚洲直连线路途径欧美澳等节点，自动触发 **`⚠️ 物理绕路`** 红色警报。
-*   **🧬 三网骨干特征精准识别**
-    *   **高端精品网**：秒速识别 电信 CN2 GIA、联通 CUII (9929)、移动 CMIN2。
-    *   **公众骨干网**：精准分类 163、169、CMNET 及 CERNET/CSTNET。
-    *   **国际大鳄探针**：内置 NTT, Cogent, GTT, Telia, RETN, Tata 等近 20 家 Tier-1 运营商暗号字典。
-*   **🗂️ 级联日志手风琴 UI**
-    强迫症福音的排版逻辑。摘要显示最终结论，点击任意一行丝滑展开**强制单行对齐**的原厂纯净 Traceroute 溯源日志，方便截图留证。
-*   **🔒 零隐私泄露 (纯前端)**
-    所有请求均在用户浏览器本地完成异步队列分发。**无后端数据库，无请求日志中转**，你的“自定义本机测试 IP”绝对安全。
+- **一键书签提取器 (Bookmarklet)**：丢掉繁琐的浏览器 F12 抓包！将智能书签拖入收藏夹，在任意 WHMCS / HostBill 等主流商家 Looking Glass 页面轻轻一点，即可**全自动嗅探所有节点的 API 与发包参数**，直接带回本平台。
+- **多种测绘模式引擎**：
+  - **🏓 Ping (极速模式)**：并发执行，快速扫描全地域延迟和丢包率，迅速淘汰劣质机房。
+  - **⚡ Traceroute (路由模式)**：追踪路径，解析节点走向。
+  - **📊 MTR (深度模式)**：深层次挖掘骨干网跳数及各节点的稳定性与抖动情况。
+- **商家多机房横向比拼 (Dashboard)**：首创三网自动选优算法。无论商家提供多少个可选机房，系统自动提取“最优宽带（低丢包、低延迟）”为您生成排行看板。
+- **纯粹的前端应用**：基于现代化的 **Vite + React 18 + TailwindCSS 4** 重构。零服务器依赖，零后门风险，纯浏览器端并发发包（依赖目标 API 的支持）。所有用户习惯（目标大区、自定义 IP、发包 Payload）均借助 `LocalStorage` 本地持久化保存。
 
 ---
 
-## 📖 极速上手指南
+## 👨‍💻 小白用户怎么用？
 
-1.  **获取接口**：在目标 VPS 商家的 Looking Glass 页面按 `F12`，抓取测速请求的 API 网址，填入第一步。
-2.  **提取暗号**：将抓包请求体（Payload）中的原始数据复制到第二步的黑框中，点击 **✨ 格式规范化转换**。
-3.  **选择靶机**：勾选内置的全国核心大区枢纽，或勾选“自定义目标 IP”并点击 **🌐 获取本机 IP** 进行零门槛家宽测速。
-4.  **执行测绘**：点击底部蓝色大按钮，静待硬核报告生成。支持一键导出 Markdown 纯文本数据，方便粘贴至评测博客或视频简介。
-
----
-
-## 📚 路由术语防坑指南 (速查表)
-
-*   **物理直连 vs 逻辑直连**：BGP 层面没有经过第三方 ASN 不代表物理距离最短。请密切关注本工具输出的“地理途径”警报。
-*   **晚高峰测试**：国际中转网（如 NTT / Cogent）在白天可能延迟极低，建议在 20:00 - 23:00 之间重新测绘，以观察 163 等骨干网真实的拥堵与丢包情况。
+1. 进入在线网页地址：[https://playfulsoul.github.io/vps-backtrace-web/](https://playfulsoul.github.io/vps-backtrace-web/)
+2. 在网页顶部，找到蓝色的按钮 **`🔖 + VPS 路由一键捕获`**。
+3. **按住这个按钮**，把它拖拽到你浏览器的顶部书签栏/收藏夹（变成一个书签）。
+4. 以后去任何买机器的测试页面（比如 Looking Glass），只要点一下这个书签，系统就会自动帮你把这个商家的所有测试机房信息抓进平台里，一键开测！
 
 ---
 
-## 🤝 贡献与自定义扩充
+## 🛠️ 极客玩家 / 二次开发指南
 
-本工具极其轻量。如果你发现了新的奇葩绕路节点或特殊的国际中转商，只需在 `index.html` 的 `analyzeRoute` 函数中，添加一行简短的正则规则即可让雷达无限进化：
+项目采用现代前端工程化架构，开箱即用，扩展极度友好。
 
-```javascript
-// 扩充示例：
-if (tText.match(/moscow|mow|vvo/i)) geoNodes.push("🇷🇺俄罗斯");
+### 环境依赖
+请确保你的电脑已经安装了 `Node.js` (建议 v18+)。
+
+### 启动项目
+```bash
+# 克隆代码
+git clone https://github.com/playfulsoul/vps-backtrace-web.git
+cd vps-backtrace-web
+
+# 安装依赖包
+npm install
+
+# 启动本地热更新开发服务器
+npm run dev
 ```
 
-## 🔄 版本更新日志 (Changelog)
+### 构建与部署
+项目已内置 **GitHub Actions**。当您把代码 push 到 `main` 分支时，系统会自动将代码通过 Vite 构建，并部署到 `gh-pages` 分支上，无需人工介入。
 
-### v1.2.001 (最新)
-- **MTR 深度测绘功能**: 新增了 MTR 测试模式，UI 上增加了 Traceroute / MTR 切换按钮，丰富了测绘维度。
-- **智能捕获书签 (Bookmarklet) 优化**: 修复了在现代商业网站 (如 rabisu.com) 页面会误拦截并捕获无关的遥测/埋点 POST 请求的问题。现在的捕获更加精准。
-- **UI & 交互修复**: 修复了前端页面中 MTR 无法点击、测试目标大区不显示以及 Payload 模板没有默认数据回填的 Bug，整体体验更加丝滑。
+如果您需要手工打包：
+```bash
+npm run build
+```
+编译产物位于 `dist/` 目录中，可直接上传到任何静态托管服务。
 
+---
+
+## 📝 鸣谢与历史
+
+* 本项目经历了从原生单体 `index.html` 到现代化 `React` 架构的彻底洗礼。老版本的单文件 HTML 保存在 `legacy_v1.2` 目录中以作纪念。
+* IP 归属地与骨干网数据解析逻辑经过反复调优，最大限度地在前端过滤噪音，还原最真实的路由情况。
