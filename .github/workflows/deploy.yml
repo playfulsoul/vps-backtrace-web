@@ -5,6 +5,9 @@ on:
     branches:
       - main # 当你往 main 分支推送代码时自动触发
 
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
