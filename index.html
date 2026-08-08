@@ -409,8 +409,10 @@
             }
 
             if (validMtrRows.length > 0) {
-                // 以末端目标节点作为质量判定指标
-                const targetHop = validMtrRows[validMtrRows.length - 1];
+                // 过滤掉尾部无响应的 ??? 节点 (100% 丢包且 0.0ms 的 ICMP 屏蔽节点)，精准选取最远有效响应节点作为选机判定依据
+                const respondingHops = validMtrRows.filter(r => !((r.host === "???" || r.loss === 100.0) && r.avg === 0.0));
+                const targetHop = (respondingHops.length > 0) ? respondingHops[respondingHops.length - 1] : validMtrRows[validMtrRows.length - 1];
+
                 lossRate = targetHop.loss;
                 avgLatency = targetHop.avg;
                 stdev = targetHop.stdev;
