@@ -207,17 +207,21 @@
             let geoNodes = [];
             const tText = rawText.toLowerCase();
 
-            // ================= 地理特征嗅探 (预警绕路陷阱) =================
-            const normText = rawText.replace(/[-_./:]/g, ' ');
-            if (normText.match(/\b(los[-_]?angeles|lax|san[-_]?jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo[-_]?alto|paix|new[-_]?york|nyc|dallas|dfw|toronto|yyz|vancouver|yvr)\b/i)) geoNodes.push("🇺🇸美洲");
-            if (normText.match(/\b(frankfurt|fra|london|lhr|amsterdam|ams|paris|cdg|sofia|limburg|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|istanbul|ist)\b/i)) geoNodes.push("🇪🇺欧洲");
-            if (normText.match(/\b(tokyo|nrt|hnd|osaka|kix|japan)\b/i)) geoNodes.push("🇯🇵日本");
-            if (normText.match(/\b(singapore|sin|sgp)\b/i)) geoNodes.push("🇸🇬新加坡");
-            if (normText.match(/\b(hong[-_]?kong|hkg)\b/i)) geoNodes.push("🇭🇰香港");
-            if (normText.match(/\b(seoul|sel|icn|korea)\b/i)) geoNodes.push("🇰🇷韩国");
-            if (normText.match(/\b(moscow|mow|svo|vladivostok|vvo)\b/i)) geoNodes.push("🇷🇺俄罗斯");
-            if (normText.match(/\b(dubai|dxb|uae)\b/i)) geoNodes.push("🇦🇪中东");
-            if (normText.match(/\b(sydney|syd|melbourne|mel|auckland|australia)\b/i)) geoNodes.push("🇦🇺澳洲");
+            // ================= 地理特征嗅探 (按 Hop 顺序精准追踪) =================
+            const logLines = rawText.split(/\r?\n/);
+            for (let line of logLines) {
+                // 将分隔符转为空格，并剥离连接在主机名末尾的接口/路由器编号 (如 LosAngeles6 -> LosAngeles, fra15 -> fra, lax1 -> lax)
+                const normLine = line.replace(/[-_./:]/g, ' ').replace(/([a-zA-Z]+)\d+/g, '$1');
+                if (normLine.match(/\b(los[-_]?angeles|lax|san[-_]?jose|sjc|seattle|sea|ashburn|iad|chicago|ord|palo[-_]?alto|paix|new[-_]?york|nyc|dallas|dfw|toronto|yyz|vancouver|yvr)\b/i)) geoNodes.push("🇺🇸美洲");
+                if (normLine.match(/\b(frankfurt|fra|london|lhr|amsterdam|ams|paris|cdg|sofia|limburg|zurich|zrh|stockholm|helsinki|warsaw|milan|madrid|istanbul|ist)\b/i)) geoNodes.push("🇪🇺欧洲");
+                if (normLine.match(/\b(tokyo|nrt|hnd|osaka|kix|japan)\b/i)) geoNodes.push("🇯🇵日本");
+                if (normLine.match(/\b(singapore|sin|sgp)\b/i)) geoNodes.push("🇸🇬新加坡");
+                if (normLine.match(/\b(hong[-_]?kong|hkg)\b/i)) geoNodes.push("🇭🇰香港");
+                if (normLine.match(/\b(seoul|sel|icn|korea)\b/i)) geoNodes.push("🇰🇷韩国");
+                if (normLine.match(/\b(moscow|mow|svo|vladivostok|vvo)\b/i)) geoNodes.push("🇷🇺俄罗斯");
+                if (normLine.match(/\b(dubai|dxb|uae)\b/i)) geoNodes.push("🇦🇪中东");
+                if (normLine.match(/\b(sydney|syd|melbourne|mel|auckland|australia)\b/i)) geoNodes.push("🇦🇺澳洲");
+            }
 
             let uniqueGeo = [...new Set(geoNodes)];
 
