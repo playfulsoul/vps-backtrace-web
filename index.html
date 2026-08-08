@@ -705,7 +705,11 @@
                             try {
                                 let parsed = JSON.parse(rawText);
                                 formattedLog = Array.isArray(parsed) ? parsed.join('\n') : (parsed.output || parsed.result || JSON.stringify(parsed, null, 2));
-                            } catch (e) {}
+                            } catch (e) {
+                                if (!rawText.includes('\n') && /1\s+\d+/.test(rawText)) {
+                                    formattedLog = rawText.replace(/(\s+)(\d+\s+\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b|\s+\d+\s+[^0-9])/g, '\n$2');
+                                }
+                            }
                             
                             let analysis;
                             if (currentMode === 'mtr') {
@@ -770,16 +774,6 @@
 
                             document.getElementById(`status_${uniqueId}`).innerHTML = `${typeBadge} ${geoBadge} ${mtrBadge} <span class="text-gray-700 font-medium ml-1 mr-1 whitespace-nowrap">${analysis.route}</span> ${latencyBadge}`;
 
-                            // 清洗格式保证日志的竖排纯净度
-                            let formattedLog = rawText;
-                            try {
-                                let parsed = JSON.parse(rawText);
-                                formattedLog = Array.isArray(parsed) ? parsed.join('\n') : (parsed.output || parsed.result || JSON.stringify(parsed, null, 2));
-                            } catch(e) {
-                                if (!rawText.includes('\n') && /1\s+\d+/.test(rawText)) {
-                                    formattedLog = rawText.replace(/(\s+)(\d+\s+\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b|\s+\d+\s+[^0-9])/g, '\n$2');
-                                }
-                            }
                             document.getElementById(`log_${uniqueId}`).querySelector('pre').innerText = formattedLog || "无详细文本。";
 
                             // 数据存入导出池 (携带地理嗅探及 MTR 质量指标)
